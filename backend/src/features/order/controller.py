@@ -3,14 +3,14 @@ from sqlalchemy.orm import Session
 from src.core.database import get_db
 from src.core.enums import OrderStatus, StaffRole
 from src.core.security import require_roles
-from src.features.oder import service, schemas
+from src.features.order import service, schemas
 from typing import Optional
 from datetime import date
 from src.features.staff.model import Staff
 from src.core.enums import EventType
-from src.features.oder_menu import schemas as schemas_oder_menu
-from src.features.oder_items import service as service_oder_items
-from src.features.oder_items import schemas as schemas_oder_items
+from src.features.order_menu import schemas as schemas_oder_menu
+from src.features.order_items import service as service_oder_items
+from src.features.order_items import schemas as schemas_oder_items
 
 
 

@@ -6,7 +6,7 @@ from src.features.hall.controller import router as hall_router
 from src.features.upload.router import router as upload_router
 from src.features.menus.controller import router as menus_router
 from src.features.dishes.controller import router as dishes_router
-from src.features.oder.controller import router as order_router
+from src.features.order.controller import router as order_router
 
 
 def register_routes(app: FastAPI):

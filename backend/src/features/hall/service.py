@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from fastapi import HTTPException
 from datetime import date
 from src.core.enums import EventShift
-from src.features.oder.model import Order
+from src.features.order.model import Order
 
 
 async def get_halls(db: Session) -> model.Hall:

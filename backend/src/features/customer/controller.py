@@ -5,7 +5,7 @@ from src.core.enums import StaffRole
 from sqlalchemy.orm import Session
 from src.core.database import get_db
 from src.core.security import get_current_user, require_roles
-from src.features.oder import schemas as order_schemas
+from src.features.order import schemas as order_schemas
 
 router = APIRouter(
     prefix='/customer',

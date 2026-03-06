@@ -4,10 +4,10 @@ from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 from sqlalchemy import and_
 
-from src.features.oder.model import Order
-from src.features.oder.schemas import OrderCreate, OrderUpdate
-from src.features.oder_menu import schemas as schemas_oder_menu
-from src.features.oder_menu.model import OrderMenu
+from src.features.order.model import Order
+from src.features.order.schemas import OrderCreate, OrderUpdate
+from src.features.order_menu import schemas as schemas_oder_menu
+from src.features.order_menu.model import OrderMenu
 from src.features.hall.model import Hall
 from src.features.customer.model import Customer
 from src.features.menus.model import Menu

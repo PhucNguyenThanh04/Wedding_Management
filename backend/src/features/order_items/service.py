@@ -4,9 +4,9 @@ from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 from sqlalchemy import and_
 
-from src.features.oder.model import Order
-from src.features.oder_items.model import OrderItem
-from src.features.oder_items.schemas import OrderItemCreate, OrderItemUpdate
+from src.features.order.model import Order
+from src.features.order_items.model import OrderItem
+from src.features.order_items.schemas import OrderItemCreate, OrderItemUpdate
 from src.features.dishes.model import Dish
 from src.features.hall.model import Hall
 
