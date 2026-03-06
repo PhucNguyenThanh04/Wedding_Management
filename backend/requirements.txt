@@ -13,3 +13,5 @@ email-validator
 python-jose
 jose
 python-jose[cryptography]
+reportlab
+pydantic-settings
