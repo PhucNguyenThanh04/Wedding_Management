@@ -123,7 +123,7 @@ async def completed_order(
     return oder
 
 
-# oder menu =======================================================================================
+# order menu =======================================================================================
 
 @router.post("/{order_id}/menus", response_model=schemas.OrderResponse)
 async def add_menu_to_order(
@@ -166,7 +166,7 @@ async def remove_menu_from_order(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Order or OrderMenu not found")
 
 
-# oder items (món tự chọn - tuchon) ================================================================
+# order items (món tự chọn - tuchon) ================================================================
 
 @router.post("/{order_id}/dishes", response_model=schemas.OrderResponse)
 async def add_dish_to_order(
