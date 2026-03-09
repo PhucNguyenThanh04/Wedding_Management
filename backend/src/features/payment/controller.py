@@ -19,7 +19,6 @@ async def get_order_payment(
     db: Session = Depends(get_db),
     _current_staff: Staff = Depends(require_roles(StaffRole.staff, StaffRole.owner))
 ):
-    """Tổng quan thanh toán của đơn hàng"""
     return await service.get_payment_by_order_id(db, order_id)
 
 
@@ -29,5 +28,5 @@ async def init_order_payment(
     db: Session = Depends(get_db),
     _current_staff: Staff = Depends(require_roles(StaffRole.staff, StaffRole.owner))
 ):
-    """Khởi tạo payment cho đơn hàng (tự động khi tạo đơn hoặc gọi thủ công)"""
+
     return await service.init_payment_for_order(db, order_id)

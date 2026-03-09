@@ -19,7 +19,6 @@ async def list_order_transactions(
     db: Session = Depends(get_db),
     _current_staff: Staff = Depends(require_roles(StaffRole.staff, StaffRole.owner))
 ):
-    """Lấy danh sách giao dịch thanh toán của đơn hàng"""
     transactions = await service.list_transactions_by_order(db, order_id)
     return {
         "total": len(transactions),

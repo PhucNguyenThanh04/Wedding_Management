@@ -88,16 +88,6 @@ async def confirm_order(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Order not found")
     return oder
 
-@router.post("/{order_id}/complete", response_model=schemas.OrderResponse)
-async def complete_order(
-        order_id: int,
-        db: Session = Depends(get_db),
-        _current_staff=Depends(require_roles(StaffRole.owner))
-) -> schemas.OrderResponse:
-    oder = await service.complete_order(db, order_id, _current_staff)
-    if not oder:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Order not found")
-    return oder
 
 @router.post(("/{order_id}/in_process"), response_model=schemas.OrderResponse)
 async def in_process_order(

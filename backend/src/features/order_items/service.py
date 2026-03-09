@@ -12,31 +12,25 @@ from src.features.hall.model import Hall
 
 
 def _recalculate_order_totals(db: Session, order: Order) -> None:
-    """Tính lại tất cả tổng tiền cho order (bao gồm menu_total, extra_dishes_total, v.v.)."""
 
-    # Tính menu_total từ tất cả order_menus
     menu_total = Decimal("0")
     for om in order.order_menus:
         menu_total += Decimal(str(om.price_snapshot)) * om.quantity
     order.menu_total = menu_total
 
-    # Tính extra_dishes_total từ tất cả order_items (món tự chọn)
     extra_total = Decimal("0")
     for item in order.order_items:
         extra_total += Decimal(str(item.price_snapshot)) * item.quantity
     order.extra_dishes_total = extra_total
 
-    # Tính table_total
     hall = db.query(Hall).filter(Hall.id == order.hall_id).first()
     if hall:
         order.table_total = Decimal(str(hall.price_per_table)) * order.so_ban
 
-    # Tính subtotal
     service = Decimal(str(order.service_fee or 0))
     discount = Decimal(str(order.discount_amount or 0))
     order.subtotal = order.menu_total + order.extra_dishes_total + order.table_total + service - discount
 
-    # Tính thuế và tổng
     tax_rate = Decimal(str(order.tax_rate or 10))
     order.tax_amount = (order.subtotal * tax_rate / Decimal("100")).quantize(Decimal("0.01"))
     order.total_amount = order.subtotal + order.tax_amount
@@ -48,9 +42,6 @@ async def add_dish_to_order(
         payload: OrderItemCreate,
         _current_staff
 ) -> Order:
-    """
-    Thêm món ăn riêng lẻ vào order (tự chọn hoặc kêu thêm ngoài combo).
-    """
     try:
         order = db.query(Order).filter(Order.id == order_id).first()
         if not order:
@@ -59,8 +50,6 @@ async def add_dish_to_order(
                 detail="Không tìm thấy đơn hàng."
             )
 
-
-        # Kiểm tra món ăn tồn tại và đang available
         dish = db.query(Dish).filter(Dish.id == payload.dish_id).first()
         if not dish:
             raise HTTPException(
@@ -73,7 +62,6 @@ async def add_dish_to_order(
                 detail=f"Món '{dish.name}' hiện không khả dụng."
             )
 
-        # Kiểm tra món đã tồn tại trong order chưa
         existing_item = db.query(OrderItem).filter(
             and_(
                 OrderItem.order_id == order_id,
@@ -86,7 +74,6 @@ async def add_dish_to_order(
                 detail=f"Món '{dish.name}' đã có trong đơn hàng. Hãy cập nhật số lượng thay vì thêm mới."
             )
 
-        # Lấy giá món tại thời điểm đặt (price_snapshot)
         price_snapshot = Decimal(str(dish.price))
 
         order_item = OrderItem(
@@ -101,10 +88,8 @@ async def add_dish_to_order(
         db.add(order_item)
         db.flush()
 
-        # Refresh order để lấy danh sách order_items mới nhất
         db.refresh(order)
 
-        # Tính lại tổng tiền cho order
         _recalculate_order_totals(db, order)
 
         order.last_modified_by_staff_id = _current_staff.id
@@ -216,7 +201,6 @@ async def remove_dish_from_order(
 
         db.refresh(order)
 
-        # Tính lại tổng tiền cho order
         _recalculate_order_totals(db, order)
 
         order.last_modified_by_staff_id = _current_staff.id

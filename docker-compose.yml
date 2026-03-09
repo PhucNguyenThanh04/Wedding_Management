@@ -1,7 +1,6 @@
 version: "3.9"
 
 services:
-  # ── PostgreSQL ─────────────────────────────────────────────
   db:
     image: postgres:16-alpine
     container_name: wedding_db
@@ -32,10 +31,8 @@ services:
     env_file:
       - .env
     environment:
-      # Override DATABASE_URL để trỏ vào container db (không phải localhost)
       DATABASE_URL: postgresql://postgres:Thanhphuc101204*@db:5432/Wedding_Management
     volumes:
-      # Mount uploads folder để giữ file PDF khi restart container
       - ./uploads:/backend/uploads
     depends_on:
       db:

@@ -1,4 +1,5 @@
 import os
+import logging
 from datetime import datetime
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
@@ -11,7 +12,11 @@ from src.features.customer.model import Customer
 from src.features.hall.model import Hall
 from src.core.enums import OrderStatus
 
-INVOICES_DIR = os.path.join("uploads", "invoices")
+logger = logging.getLogger(__name__)
+
+# Đường dẫn tuyệt đối: backend/uploads/invoices/
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+INVOICES_DIR = os.path.join(BASE_DIR, "uploads", "invoices")
 
 
 def _ensure_invoices_dir():
@@ -38,8 +43,19 @@ def _generate_invoice_no(db: Session) -> str:
     return f"{prefix}{next_num:04d}"
 
 
-def _generate_pdf(invoice: Invoice, order: Order, payment: Payment, customer, hall) -> str:
-    """Tạo PDF hóa đơn sử dụng reportlab"""
+def _generate_pdf(
+    invoice: Invoice,
+    order: Order,
+    payment: Payment,
+    customer,
+    hall,
+    issued_at: datetime,
+) -> str:
+    """Tạo PDF hóa đơn sử dụng reportlab.
+
+    ``issued_at`` được truyền tường minh vì tại thời điểm gọi hàm này
+    giá trị ``invoice.issued_at`` có thể chưa được DB gán (server-default).
+    """
     _ensure_invoices_dir()
 
     filename = f"{invoice.invoice_no}.pdf"
@@ -49,20 +65,30 @@ def _generate_pdf(invoice: Invoice, order: Order, payment: Payment, customer, ha
         from reportlab.lib.pagesizes import A4
         from reportlab.lib.units import mm
         from reportlab.pdfgen import canvas
-        from reportlab.lib import colors
+    except ImportError as exc:
+        logger.error("reportlab chưa được cài đặt. Chạy: pip install reportlab")
+        raise RuntimeError(
+            "Thư viện reportlab chưa được cài đặt. "
+            "Hãy chạy: pip install reportlab"
+        ) from exc
 
+    try:
         c = canvas.Canvas(filepath, pagesize=A4)
         width, height = A4
 
-        # Header
+        # ── Header ──────────────────────────────────────
         c.setFont("Helvetica-Bold", 20)
         c.drawString(30 * mm, height - 30 * mm, "HOA DON / INVOICE")
 
         c.setFont("Helvetica", 10)
         c.drawString(30 * mm, height - 40 * mm, f"Ma hoa don: {invoice.invoice_no}")
-        c.drawString(30 * mm, height - 45 * mm, f"Ngay xuat: {invoice.issued_at.strftime('%d/%m/%Y %H:%M')}")
+        c.drawString(
+            30 * mm,
+            height - 45 * mm,
+            f"Ngay xuat: {issued_at.strftime('%d/%m/%Y %H:%M')}",
+        )
 
-        # Customer Info
+        # ── Customer Info ───────────────────────────────
         y = height - 60 * mm
         c.setFont("Helvetica-Bold", 12)
         c.drawString(30 * mm, y, "THONG TIN KHACH HANG")
@@ -74,7 +100,7 @@ def _generate_pdf(invoice: Invoice, order: Order, payment: Payment, customer, ha
         y -= 5 * mm
         c.drawString(30 * mm, y, f"Email: {customer.email if customer else 'N/A'}")
 
-        # Order Info
+        # ── Order Info ──────────────────────────────────
         y -= 12 * mm
         c.setFont("Helvetica-Bold", 12)
         c.drawString(30 * mm, y, "THONG TIN DON HANG")
@@ -92,7 +118,7 @@ def _generate_pdf(invoice: Invoice, order: Order, payment: Payment, customer, ha
         y -= 5 * mm
         c.drawString(30 * mm, y, f"So ban: {order.so_ban}")
 
-        # Pricing
+        # ── Pricing ─────────────────────────────────────
         y -= 12 * mm
         c.setFont("Helvetica-Bold", 12)
         c.drawString(30 * mm, y, "CHI TIET THANH TOAN")
@@ -114,13 +140,13 @@ def _generate_pdf(invoice: Invoice, order: Order, payment: Payment, customer, ha
             c.drawRightString(width - 30 * mm, y, value)
             y -= 5 * mm
 
-        # Total
+        # ── Total ───────────────────────────────────────
         y -= 3 * mm
         c.setFont("Helvetica-Bold", 14)
         c.drawString(30 * mm, y, "TONG CONG:")
         c.drawRightString(width - 30 * mm, y, f"{order.total_amount:,.0f} VND")
 
-        # Payment info
+        # ── Payment info ────────────────────────────────
         y -= 10 * mm
         c.setFont("Helvetica", 10)
         c.drawString(30 * mm, y, f"Da thanh toan: {payment.paid_amount:,.0f} VND")
@@ -129,7 +155,7 @@ def _generate_pdf(invoice: Invoice, order: Order, payment: Payment, customer, ha
         y -= 5 * mm
         c.drawString(30 * mm, y, f"Trang thai: {payment.status.value}")
 
-        # Notes
+        # ── Notes ───────────────────────────────────────
         if invoice.notes:
             y -= 12 * mm
             c.setFont("Helvetica-Bold", 10)
@@ -138,16 +164,20 @@ def _generate_pdf(invoice: Invoice, order: Order, payment: Payment, customer, ha
             y -= 5 * mm
             c.drawString(30 * mm, y, invoice.notes)
 
-        # Footer
+        # ── Footer ──────────────────────────────────────
         c.setFont("Helvetica", 8)
         c.drawString(30 * mm, 20 * mm, "Cam on quy khach! / Thank you!")
 
         c.save()
+        logger.info("PDF hóa đơn đã tạo thành công: %s", filepath)
         return filepath
 
-    except ImportError:
-        # Nếu không có reportlab, trả về path rỗng
-        return ""
+    except Exception as e:
+        logger.error("Lỗi khi tạo PDF hóa đơn: %s", e, exc_info=True)
+        # Xóa file lỗi nếu có
+        if os.path.exists(filepath):
+            os.remove(filepath)
+        raise RuntimeError(f"Không thể tạo PDF hóa đơn: {e}") from e
 
 
 async def create_invoice_for_order(
@@ -156,7 +186,6 @@ async def create_invoice_for_order(
     payload: InvoiceCreate,
     current_staff
 ) -> Invoice:
-    """Xuất hóa đơn cho đơn hàng"""
     try:
         order = db.query(Order).filter(Order.id == order_id).first()
         if not order:
@@ -180,6 +209,10 @@ async def create_invoice_for_order(
                 detail="Đơn hàng chưa có thông tin thanh toán. Hãy khởi tạo payment trước."
             )
 
+        # Gán issued_at tường minh bằng Python datetime (không dùng func.now() SQL)
+        # để _generate_pdf có giá trị ngay trước khi commit.
+        now = datetime.now()
+
         # Tạo mã hóa đơn
         invoice_no = _generate_invoice_no(db)
 
@@ -187,9 +220,11 @@ async def create_invoice_for_order(
             order_id=order_id,
             payment_id=payment.id,
             invoice_no=invoice_no,
+            issued_at=now,
             tax_amount=order.tax_amount,
             notes=payload.notes,
             created_by_staff_id=current_staff.id,
+            created_at=now,
         )
         db.add(invoice)
         db.flush()
@@ -198,7 +233,7 @@ async def create_invoice_for_order(
         # Tạo PDF
         customer = db.query(Customer).filter(Customer.id == order.customer_id).first()
         hall = db.query(Hall).filter(Hall.id == order.hall_id).first()
-        pdf_path = _generate_pdf(invoice, order, payment, customer, hall)
+        pdf_path = _generate_pdf(invoice, order, payment, customer, hall, issued_at=now)
         invoice.pdf_path = pdf_path
 
         # Cập nhật trạng thái đơn → invoiced
@@ -206,12 +241,17 @@ async def create_invoice_for_order(
 
         db.commit()
         db.refresh(invoice)
+        logger.info(
+            "Hóa đơn %s đã tạo cho đơn hàng #%s — PDF: %s",
+            invoice.invoice_no, order_id, pdf_path,
+        )
         return invoice
 
     except HTTPException:
         raise
     except Exception as e:
         db.rollback()
+        logger.error("Lỗi khi tạo hóa đơn cho đơn #%s: %s", order_id, e, exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Lỗi khi tạo hóa đơn: {str(e)}"
@@ -219,7 +259,6 @@ async def create_invoice_for_order(
 
 
 async def get_invoice_by_order(db: Session, order_id: int) -> Invoice:
-    """Xem hóa đơn của đơn hàng"""
     try:
         order = db.query(Order).filter(Order.id == order_id).first()
         if not order:

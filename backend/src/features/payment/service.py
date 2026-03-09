@@ -8,7 +8,6 @@ from src.core.enums import PaymentStatus, OrderStatus
 
 
 async def create_payment_for_order(db: Session, order_id: int, notes: str = None) -> Payment:
-    """Tạo payment record cho order (gọi khi xác nhận đơn)"""
     try:
         order = db.query(Order).filter(Order.id == order_id).first()
         if not order:
@@ -73,9 +72,9 @@ async def get_payment_by_order_id(db: Session, order_id: int) -> Payment:
 
 
 async def init_payment_for_order(db: Session, order_id: int, notes: str = None) -> Payment:
-    """POST /orders/{id}/payment — khởi tạo payment nếu chưa có"""
     try:
         order = db.query(Order).filter(Order.id == order_id).first()
+
         if not order:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
@@ -90,7 +89,6 @@ async def init_payment_for_order(db: Session, order_id: int, notes: str = None) 
 
         existing = db.query(Payment).filter(Payment.order_id == order_id).first()
         if existing:
-            # Cập nhật order_total nếu đơn đã thay đổi
             if existing.order_total != order.total_amount:
                 diff = order.total_amount - existing.order_total
                 existing.order_total = order.total_amount

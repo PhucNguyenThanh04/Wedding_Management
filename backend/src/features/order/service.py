@@ -125,8 +125,14 @@ async def create_order(db: Session, payload: OrderCreate,
                     )
                 )
 
-        # 5. Tính tiền bàn (table_total = số bàn × giá mỗi bàn)
-        table_total = payload.so_ban * hall.price_per_table
+        # 5. Tính tiền bàn và tổng tiền ban đầu
+        table_total = Decimal(str(payload.so_ban)) * Decimal(str(hall.price_per_table))
+        service_fee = Decimal("0")
+        discount_amount = Decimal("0")
+        subtotal = table_total + service_fee - discount_amount
+        tax_rate = Decimal("10.00")
+        tax_amount = (subtotal * tax_rate / Decimal("100")).quantize(Decimal("0.01"))
+        total_amount = subtotal + tax_amount
 
         # 6. Tạo order mới
         new_order = Order(
@@ -140,6 +146,16 @@ async def create_order(db: Session, payload: OrderCreate,
             so_ban=payload.so_ban,
             notes=payload.notes,
             status=OrderStatus.booking_pending,
+            # Pricing
+            table_total=table_total,
+            menu_total=Decimal("0"),
+            extra_dishes_total=Decimal("0"),
+            service_fee=service_fee,
+            discount_amount=discount_amount,
+            subtotal=subtotal,
+            tax_rate=tax_rate,
+            tax_amount=tax_amount,
+            total_amount=total_amount,
         )
 
         db.add(new_order)
@@ -329,6 +345,12 @@ async def confirm_order(
         if not order:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Order not found")
 
+        if order.status != OrderStatus.booking_pending:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Chỉ có đơn hàng ở trạng thái 'booking_pending' mới có thể xác nhận. "
+                       f"Trạng thái hiện tại: {order.status.value}."
+            )
         order.status = OrderStatus.confirmed
         order.confirmed_at = date.today()
         order.last_modified_by_staff_id = _current_staff.id
@@ -347,33 +369,6 @@ async def confirm_order(
             detail=f"Đã xảy ra lỗi khi xác nhận đơn hàng: {str(e)}"
         )
 
-async def complete_order(
-        db: Session,
-        order_id: int,
-        _current_staff
-) -> Order | None:
-    try:
-        order = db.query(Order).filter(Order.id == order_id).first()
-        if not order:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Order not found")
-
-        order.status = OrderStatus.completed
-        order.completed_at = date.today()
-        order.last_modified_by_staff_id = _current_staff.id
-        order.last_modified_at = date.today()
-
-        db.commit()
-        db.refresh(order)
-        return order
-
-    except HTTPException:
-        raise
-
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Đã xảy ra lỗi khi hoàn thành đơn hàng: {str(e)}")
-
 
 async def in_process_order(
         db: Session,
@@ -384,6 +379,12 @@ async def in_process_order(
         order = db.query(Order).filter(Order.id == order_id).first()
         if not order:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Order not found")
+        if order.status != OrderStatus.confirmed:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Chỉ có đơn hàng ở trạng thái 'confirmed' mới có thể chuyển sang 'in_progress'. "
+                       f"Trạng thái hiện tại: {order.status.value}."
+            )
 
         order.status = OrderStatus.in_progress
         order.last_modified_by_staff_id = _current_staff.id
@@ -411,6 +412,12 @@ async def completed_order(
         if not order:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Order not found")
 
+        if order.status != OrderStatus.in_progress:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Chỉ có đơn hàng ở trạng thái 'in_progress' mới có thể chuyển sang 'completed'. "
+                       f"Trạng thái hiện tại: {order.status.value}."
+            )
         order.status = OrderStatus.completed
         order.completed_at = date.today()
         order.last_modified_by_staff_id = _current_staff.id

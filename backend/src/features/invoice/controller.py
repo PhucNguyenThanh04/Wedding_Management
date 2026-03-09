@@ -9,7 +9,6 @@ from src.features.invoice import service, schemas
 from src.features.staff.model import Staff
 
 
-# Router cho /orders/{id}/invoice
 order_invoice_router = APIRouter(
     prefix="/orders",
     tags=["Invoices"]
@@ -22,7 +21,6 @@ invoice_router = APIRouter(
 )
 
 
-# --- /orders/{order_id}/invoice ---
 
 @order_invoice_router.get("/{order_id}/invoice", response_model=schemas.InvoiceResponse)
 async def get_order_invoice(
@@ -30,7 +28,6 @@ async def get_order_invoice(
     db: Session = Depends(get_db),
     _current_staff: Staff = Depends(require_roles(StaffRole.staff, StaffRole.owner))
 ):
-    """Xem hóa đơn của đơn hàng"""
     return await service.get_invoice_by_order(db, order_id)
 
 
@@ -45,11 +42,9 @@ async def create_order_invoice(
     db: Session = Depends(get_db),
     _current_staff: Staff = Depends(require_roles(StaffRole.staff, StaffRole.owner))
 ):
-    """Xuất hóa đơn cho đơn hàng (chuyển trạng thái → invoiced)"""
     return await service.create_invoice_for_order(db, order_id, payload, _current_staff)
 
 
-# --- /invoices ---
 
 @invoice_router.get("/", response_model=schemas.InvoiceListResponse)
 async def list_all_invoices(
@@ -70,7 +65,7 @@ async def get_invoice(
     db: Session = Depends(get_db),
     _current_staff: Staff = Depends(require_roles(StaffRole.staff, StaffRole.owner))
 ):
-    """Xem chi tiết hóa đơn"""
+
     return await service.get_invoice_by_id(db, invoice_id)
 
 
@@ -80,7 +75,7 @@ async def download_invoice_pdf(
     db: Session = Depends(get_db),
     _current_staff: Staff = Depends(require_roles(StaffRole.staff, StaffRole.owner))
 ):
-    """Tải PDF hóa đơn"""
+
     pdf_path = await service.get_invoice_pdf_path(db, invoice_id)
     return FileResponse(
         path=pdf_path,

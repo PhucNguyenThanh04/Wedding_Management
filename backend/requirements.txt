@@ -15,3 +15,5 @@ jose
 python-jose[cryptography]
 reportlab
 pydantic-settings
+reportlab
+fastapi-mail

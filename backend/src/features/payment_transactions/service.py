@@ -15,7 +15,7 @@ async def record_transaction(
     payload: TransactionCreate,
     current_staff
 ) -> PaymentTransaction:
-    """Ghi nhận 1 lần thanh toán / đặt cọc"""
+
     try:
         # Tìm order
         order = db.query(Order).filter(Order.id == order_id).first()
