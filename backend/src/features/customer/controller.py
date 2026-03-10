@@ -35,8 +35,7 @@ async def create_customer(
 @router.get("/phone/{phone}", response_model=schemas.CustomerResponse)
 async def get_customer_by_phone(
         phone: str,
-        db: Session = Depends(get_db),
-        _current_user=Depends(get_current_user)
+        db: Session = Depends(get_db)
 ):
     customer = await service.get_customer_by_phone(db, phone)
     return customer
