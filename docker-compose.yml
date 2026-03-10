@@ -7,10 +7,10 @@ services:
     restart: unless-stopped
     environment:
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: Thanhphuc101204*
+      POSTGRES_PASSWORD: Trungkiendeptrai12*
       POSTGRES_DB: Wedding_Management
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -18,25 +18,34 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+    networks:
+      - wedding_network
 
 
   backend:
     build:
-      context: .
+      context: backend
       dockerfile: Dockerfile
     container_name: wedding_backend
     restart: unless-stopped
     ports:
       - "8000:8000"
     env_file:
-      - .env
+      - backend/.env
     environment:
-      DATABASE_URL: postgresql://postgres:Thanhphuc101204*@db:5432/Wedding_Management
+      DATABASE_URL: postgresql://postgres:Trungkiendeptrai12%2A@db:5432/Wedding_Management
     volumes:
       - ./uploads:/backend/uploads
     depends_on:
       db:
         condition: service_healthy
+    networks:
+      - wedding_network
 
 volumes:
   postgres_data:
+
+networks:
+  wedding_network:
+    driver: bridge
+
