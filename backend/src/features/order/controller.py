@@ -25,7 +25,7 @@ async def list_orders(
     event_type: Optional[EventType] = Query(None),
     db: Session = Depends(get_db),
     _current_staff: Staff = Depends(require_roles(
-        StaffRole.owner,
+        StaffRole.owner, StaffRole.admin
     ))
 ):
     orders = await service.list_orders(db, status, date, event_type)
@@ -37,7 +37,7 @@ async def list_orders(
 async def create_order(
         payload: schemas.OrderCreate,
         db: Session = Depends(get_db),
-        _current_staff = Depends(require_roles(StaffRole.staff))
+        _current_staff = Depends(require_roles(StaffRole.staff, StaffRole.admin))
 ) -> schemas.OrderResponse:
     oder = await service.create_order(db, payload, _current_staff)
     return oder
@@ -46,7 +46,7 @@ async def create_order(
 async def get_oder(
         order_id: int,
         db: Session = Depends(get_db),
-        _current_staff = Depends(require_roles(StaffRole.staff, StaffRole.owner))
+        _current_staff = Depends(require_roles(StaffRole.staff, StaffRole.owner, StaffRole.admin))
 ) -> schemas.OrderResponse:
     oder = await service.get_order_by_id(db, order_id)
     if not oder:
@@ -59,7 +59,7 @@ async def update_order(
         order_id: int,
         payload: schemas.OrderUpdate,
         db: Session = Depends(get_db),
-        _current_staff=Depends(require_roles(StaffRole.staff))
+        _current_staff=Depends(require_roles(StaffRole.staff, StaffRole.admin))
 ) -> schemas.OrderResponse:
     oder = await service.update_order(db, order_id, payload, _current_staff)
     if not oder:
@@ -70,7 +70,7 @@ async def update_order(
 async def cancel_order(
         order_id: int,
         db: Session = Depends(get_db),
-        _current_staff=Depends(require_roles(StaffRole.owner))
+        _current_staff=Depends(require_roles(StaffRole.owner,StaffRole.admin))
 ):
     success = await service.cancel_order(db, order_id, _current_staff)
     if not success:
@@ -81,7 +81,7 @@ async def cancel_order(
 async def confirm_order(
         order_id: int,
         db: Session = Depends(get_db),
-        _current_staff=Depends(require_roles(StaffRole.owner))
+        _current_staff=Depends(require_roles(StaffRole.owner, StaffRole.admin))
 ) -> schemas.OrderResponse:
     oder = await service.confirm_order(db, order_id, _current_staff)
     if not oder:
@@ -93,7 +93,7 @@ async def confirm_order(
 async def in_process_order(
         order_id: int,
         db: Session = Depends(get_db),
-        _current_staff=Depends(require_roles(StaffRole.owner))
+        _current_staff=Depends(require_roles(StaffRole.owner, StaffRole.admin))
 ) -> schemas.OrderResponse:
     oder = await service.in_process_order(db, order_id, _current_staff)
     if not oder:
@@ -105,7 +105,7 @@ async def in_process_order(
 async def completed_order(
         order_id: int,
         db: Session = Depends(get_db),
-        _current_staff=Depends(require_roles(StaffRole.owner))
+        _current_staff=Depends(require_roles(StaffRole.owner, StaffRole.admin))
 ) -> schemas.OrderResponse:
     oder = await service.completed_order(db, order_id, _current_staff)
     if not oder:
@@ -120,7 +120,7 @@ async def add_menu_to_order(
         order_id: int,
         payload: schemas_oder_menu.OrderMenuCreate ,
         db: Session = Depends(get_db),
-        _current_staff=Depends(require_roles(StaffRole.staff))
+        _current_staff=Depends(require_roles(StaffRole.staff, StaffRole.admin))
 ) -> schemas.OrderResponse:
     oder = await service.add_menu_to_order(db, order_id, payload, _current_staff)
     if not oder:
@@ -136,7 +136,7 @@ async def update_menu_in_order(
         ordermenu_id: int,
         payload: schemas_oder_menu.OrderMenuUpdate,
         db: Session = Depends(get_db),
-        _current_staff=Depends(require_roles(StaffRole.staff))
+        _current_staff=Depends(require_roles(StaffRole.staff, StaffRole.admin))
 ) -> schemas.OrderResponse:
     oder = await service.update_menu_in_order(db, order_id, ordermenu_id, payload, _current_staff)
     if not oder:
@@ -149,7 +149,7 @@ async def remove_menu_from_order(
         order_id: int,
         ordermenu_id: int,
         db: Session = Depends(get_db),
-        _current_staff=Depends(require_roles(StaffRole.staff))
+        _current_staff=Depends(require_roles(StaffRole.staff, StaffRole.admin))
 ):
     success = await service.remove_menu_from_order(db, order_id, ordermenu_id, _current_staff)
     if not success:
@@ -163,7 +163,7 @@ async def add_dish_to_order(
         order_id: int,
         payload: schemas_oder_items.OrderItemCreate,
         db: Session = Depends(get_db),
-        _current_staff=Depends(require_roles(StaffRole.staff))
+        _current_staff=Depends(require_roles(StaffRole.staff, StaffRole.admin))
 ) -> schemas.OrderResponse:
     order = await service_oder_items.add_dish_to_order(db, order_id, payload, _current_staff)
     if not order:
@@ -177,7 +177,7 @@ async def update_dish_in_order(
         order_item_id: int,
         payload: schemas_oder_items.OrderItemUpdate,
         db: Session = Depends(get_db),
-        _current_staff=Depends(require_roles(StaffRole.staff))
+        _current_staff=Depends(require_roles(StaffRole.staff, StaffRole.admin))
 ) -> schemas.OrderResponse:
     order = await service_oder_items.update_dish_in_order(db, order_id, order_item_id, payload, _current_staff)
     if not order:
@@ -190,7 +190,7 @@ async def remove_dish_from_order(
         order_id: int,
         order_item_id: int,
         db: Session = Depends(get_db),
-        _current_staff=Depends(require_roles(StaffRole.staff))
+        _current_staff=Depends(require_roles(StaffRole.staff, StaffRole.admin))
 ):
     success = await service_oder_items.remove_dish_from_order(db, order_id, order_item_id, _current_staff)
     if not success:

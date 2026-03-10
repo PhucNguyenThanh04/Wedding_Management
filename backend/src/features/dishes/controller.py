@@ -18,7 +18,7 @@ router = APIRouter(
 async def create_dish(
     payload: schemas.DishCreate = Body(...),
     db: Session = Depends(get_db),
-    _current_owner=Depends(require_roles(StaffRole.owner))
+    _current_owner=Depends(require_roles(StaffRole.owner, StaffRole.admin))
 ):
     dish = await service.create_dish(db, payload)
     return dish
@@ -45,7 +45,7 @@ async def list_dishes(
 async def delete_dish(
     dish_id: int,
     db: Session = Depends(get_db),
-    _current_owner=Depends(require_roles(StaffRole.owner))
+    _current_owner=Depends(require_roles(StaffRole.owner, StaffRole.admin))
 ):
     await service.delete_dish(db, dish_id)
     return None
@@ -55,7 +55,7 @@ async def update_dish(
     dish_id: int,
     payload: schemas.DishUpdate = Body(...),
     db: Session = Depends(get_db),
-    _current_owner=Depends(require_roles(StaffRole.owner))
+    _current_owner=Depends(require_roles(StaffRole.owner, StaffRole.admin))
 ):
     dish = await service.update_dish(db, dish_id, payload)
     return dish

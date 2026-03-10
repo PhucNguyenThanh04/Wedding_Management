@@ -6,7 +6,7 @@ from src.core.config import setting
 
 engine = create_engine(
     setting.DATABASE_URL,
-    # echo=setting.sql_echo or setting.debug,          # Tắt ở production
+    # echo=setting.sql_echo or setting.debug,
     pool_pre_ping=True,
 )
 

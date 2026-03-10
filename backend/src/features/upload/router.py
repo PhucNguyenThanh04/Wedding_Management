@@ -13,7 +13,7 @@ MAX_FILE_SIZE = 5 * 1024 * 1024  # 5MB
 
 @router.post("/image")
 async def upload_image(file: UploadFile = File(...),
-                       _current_user=Depends(require_roles(StaffRole.owner))):
+                       _current_user=Depends(require_roles(StaffRole.owner, StaffRole.admin, StaffRole.staff))):
     if file.content_type not in ALLOWED_TYPES:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,

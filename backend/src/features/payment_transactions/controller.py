@@ -17,7 +17,7 @@ router = APIRouter(
 async def list_order_transactions(
     order_id: int,
     db: Session = Depends(get_db),
-    _current_staff: Staff = Depends(require_roles(StaffRole.staff, StaffRole.owner))
+    _current_staff: Staff = Depends(require_roles(StaffRole.staff, StaffRole.owner, StaffRole.admin))
 ):
     transactions = await service.list_transactions_by_order(db, order_id)
     return {
@@ -35,7 +35,7 @@ async def record_order_transaction(
     order_id: int,
     payload: schemas.TransactionCreate,
     db: Session = Depends(get_db),
-    _current_staff: Staff = Depends(require_roles(StaffRole.staff, StaffRole.owner))
+    _current_staff: Staff = Depends(require_roles(StaffRole.staff, StaffRole.owner, StaffRole.admin))
 ):
     """Ghi nhận 1 lần thanh toán / đặt cọc cho đơn hàng"""
     return await service.record_transaction(db, order_id, payload, _current_staff)

@@ -37,7 +37,7 @@ async def get_hall(
 async def create_hall(
         payload: schemas.HallCreate,
         db: Session = Depends(get_db),
-        _current_owner=Depends(require_roles(StaffRole.owner))
+        _current_owner=Depends(require_roles(StaffRole.owner, StaffRole.admin))
 ):
     hall = await service.create_hall(db, payload)
     return hall
@@ -47,7 +47,7 @@ async def create_hall(
 async def toggle_hall_availability (
         hall_id: int,
         db: Session = Depends(get_db),
-        _current_owner=Depends(require_roles(StaffRole.owner))
+        _current_owner=Depends(require_roles(StaffRole.owner, StaffRole.admin))
 ):
     hall = await service.toggle_hall_availability(db, hall_id)
     return hall
@@ -57,7 +57,7 @@ async def update_hall(
         hall_id: int,
         payload: schemas.HallUpdate,
         db: Session = Depends(get_db),
-        _current_owner=Depends(require_roles(StaffRole.owner))
+        _current_owner=Depends(require_roles(StaffRole.owner, StaffRole.admin))
 ):
     hall = await service.update_hall(db, hall_id, payload)
     return hall
@@ -66,7 +66,7 @@ async def update_hall(
 async def delete_hall(
         hall_id: int,
         db: Session = Depends(get_db),
-        _current_owner=Depends(require_roles(StaffRole.owner))
+        _current_owner=Depends(require_roles(StaffRole.owner, StaffRole.admin))
 ):
     await service.delete_hall(db, hall_id)
     return None

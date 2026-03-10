@@ -22,16 +22,16 @@ async def get_revenue_report(
     month: Optional[int] = Query(None, ge=1, le=12, description="Tháng (chỉ khi period=month)"),
     quarter: Optional[int] = Query(None, ge=1, le=4, description="Quý (chỉ khi period=quarter)"),
     db: Session = Depends(get_db),
-    _current_staff: Staff = Depends(require_roles(StaffRole.owner))
+    _current_staff: Staff = Depends(require_roles(StaffRole.owner, StaffRole.admin))
 ):
-    """Báo cáo doanh thu theo tháng/quý/năm"""
+
     return await service.get_revenue(db, period, year, month, quarter)
 
 
 @router.get("/orders/summary", response_model=schemas.OrdersSummary)
 async def get_orders_summary(
     db: Session = Depends(get_db),
-    _current_staff: Staff = Depends(require_roles(StaffRole.owner))
+    _current_staff: Staff = Depends(require_roles(StaffRole.owner, StaffRole.admin))
 ):
     """Tổng đơn theo trạng thái"""
     return await service.get_orders_summary(db)
@@ -40,9 +40,8 @@ async def get_orders_summary(
 @router.get("/orders/by-event-type", response_model=schemas.EventTypeRevenueResponse)
 async def get_revenue_by_event_type(
     db: Session = Depends(get_db),
-    _current_staff: Staff = Depends(require_roles(StaffRole.owner))
+    _current_staff: Staff = Depends(require_roles(StaffRole.owner, StaffRole.admin))
 ):
-    """Doanh thu theo loại tiệc"""
     items = await service.get_revenue_by_event_type(db)
     return {"items": items}
 
@@ -50,9 +49,8 @@ async def get_revenue_by_event_type(
 @router.get("/halls/utilization", response_model=schemas.HallUtilizationResponse)
 async def get_halls_utilization(
     db: Session = Depends(get_db),
-    _current_staff: Staff = Depends(require_roles(StaffRole.owner))
+    _current_staff: Staff = Depends(require_roles(StaffRole.owner, StaffRole.admin))
 ):
-    """Tỷ lệ sử dụng sảnh"""
     items = await service.get_halls_utilization(db)
     return {"items": items}
 
@@ -60,9 +58,8 @@ async def get_halls_utilization(
 @router.get("/top-menus", response_model=schemas.TopMenuResponse)
 async def get_top_menus(
     db: Session = Depends(get_db),
-    _current_staff: Staff = Depends(require_roles(StaffRole.owner))
+    _current_staff: Staff = Depends(require_roles(StaffRole.owner, StaffRole.admin))
 ):
-    """Menu/món được đặt nhiều nhất"""
     items = await service.get_top_menus(db)
     return {"items": items}
 
@@ -70,7 +67,7 @@ async def get_top_menus(
 @router.get("/staff/performance", response_model=schemas.StaffPerformanceResponse)
 async def get_staff_performance(
     db: Session = Depends(get_db),
-    _current_staff: Staff = Depends(require_roles(StaffRole.owner))
+    _current_staff: Staff = Depends(require_roles(StaffRole.owner, StaffRole.admin))
 ):
     """Đơn tạo / doanh thu theo nhân viên"""
     items = await service.get_staff_performance(db)

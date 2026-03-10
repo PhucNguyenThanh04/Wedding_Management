@@ -3,9 +3,7 @@ from src.core.database import engine, Base
 
 
 
-ess = """
-Tạo tất cả các bảng đã định nghĩa trên Base.metadata.
-"""
+
 
 async def create_all_tables():
     print("Connecting to DB and creating tables...")

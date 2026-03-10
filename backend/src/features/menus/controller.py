@@ -16,7 +16,7 @@ router = APIRouter(
 async def create_menu(
         payload: schemas.MenuCreate = Body(...),
         db: Session = Depends(get_db),
-        _current_user=Depends(require_roles(StaffRole.owner)),
+        _current_user=Depends(require_roles(StaffRole.owner, StaffRole.admin)),
 ):
     menu = await service.create_menu(db, payload)
     return menu
@@ -43,7 +43,7 @@ async def update_menu(
         menu_id: int,
         payload: schemas.MenuUpdate = Body(...),
         db: Session = Depends(get_db),
-        _current_user=Depends(require_roles(StaffRole.owner)),
+        _current_user=Depends(require_roles(StaffRole.owner, StaffRole.admin)),
 ):
     menu = await service.update_menu(db, menu_id, payload)
     return menu
@@ -52,7 +52,7 @@ async def update_menu(
 async def delete_menu(
         menu_id: int,
         db: Session = Depends(get_db),
-        _current_user=Depends(require_roles(StaffRole.owner)),
+        _current_user=Depends(require_roles(StaffRole.owner, StaffRole.admin)),
 ):
     await service.delete_menu(db, menu_id)
     return None
@@ -61,7 +61,7 @@ async def delete_menu(
 async def toggle_menu_isactive(
         menu_id: int,
         db: Session = Depends(get_db),
-        _current_user=Depends(require_roles(StaffRole.owner)),
+        _current_user=Depends(require_roles(StaffRole.owner, StaffRole.admin)),
 ):
     menu = await service.toggle_menu_is_active(db, menu_id)
     return menu
@@ -72,7 +72,7 @@ async def add_dishes_to_menu(
         menu_id: int,
         dish_ids: List[int] = Body(..., embed=True),
         db: Session = Depends(get_db),
-        _current_user=Depends(require_roles(StaffRole.staff, StaffRole.owner)),
+        _current_user=Depends(require_roles(StaffRole.staff, StaffRole.owner, StaffRole.admin)),
 ):
     menu = await service.add_dishes_to_menu(db, menu_id, dish_ids)
     return menu
@@ -91,7 +91,7 @@ async def update_quantity_of_dish_in_menu(
         dish_id: int,
         quantity: int = Body(..., embed=True),
         db: Session = Depends(get_db),
-        _current_user=Depends(require_roles(StaffRole.staff, StaffRole.owner)),
+        _current_user=Depends(require_roles(StaffRole.staff, StaffRole.owner, StaffRole.admin)),
 ):
     menu = await service.update_quantity_of_dish_in_menu(db, menu_id, dish_id, quantity)
     return menu
@@ -101,7 +101,7 @@ async def remove_dish_from_menu(
         menu_id: int,
         dish_id: int,
         db: Session = Depends(get_db),
-        _current_user=Depends(require_roles(StaffRole.staff, StaffRole.owner)),
+        _current_user=Depends(require_roles(StaffRole.staff, StaffRole.owner, StaffRole.admin)),
 ):
     menu = await service.remove_dish_from_menu(db, menu_id, dish_id)
     return menu

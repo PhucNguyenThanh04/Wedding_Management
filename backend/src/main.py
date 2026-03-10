@@ -3,7 +3,7 @@ from contextlib import asynccontextmanager
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
-from src.utils.seed_owner import seed_owner
+from src.utils.seed_owner import seed_owner, seed_admin
 from src.core.config import setting
 from src.core.database import create_tables, SessionLocal
 import src.core.models
@@ -19,6 +19,7 @@ async def lifespan(app: FastAPI):
     db = SessionLocal()
     try:
         seed_owner(db)
+        seed_admin(db)
     finally:
         db.close()
         yield

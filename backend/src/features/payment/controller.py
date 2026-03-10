@@ -17,7 +17,7 @@ router = APIRouter(
 async def get_order_payment(
     order_id: int,
     db: Session = Depends(get_db),
-    _current_staff: Staff = Depends(require_roles(StaffRole.staff, StaffRole.owner))
+    _current_staff: Staff = Depends(require_roles(StaffRole.staff, StaffRole.owner, StaffRole.admin))
 ):
     return await service.get_payment_by_order_id(db, order_id)
 
@@ -26,7 +26,7 @@ async def get_order_payment(
 async def init_order_payment(
     order_id: int,
     db: Session = Depends(get_db),
-    _current_staff: Staff = Depends(require_roles(StaffRole.staff, StaffRole.owner))
+    _current_staff: Staff = Depends(require_roles(StaffRole.staff, StaffRole.owner, StaffRole.admin))
 ):
 
     return await service.init_payment_for_order(db, order_id)

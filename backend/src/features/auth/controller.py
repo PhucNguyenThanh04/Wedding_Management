@@ -22,7 +22,7 @@ async def login(
     form_data: OAuth2PasswordRequestForm = Depends(),
     db: Session = Depends(get_db)
 ):
-    access_token, refresh_token = service.login(
+    access_token, refresh_token = await service.login(
         db,
         form_data.username,
         form_data.password

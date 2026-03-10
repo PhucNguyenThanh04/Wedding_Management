@@ -16,7 +16,7 @@ router = APIRouter(
 async def create_staff(
     payload: schemas.CreateStaffRequest = Body(...),
     db: Session = Depends(get_db),
-    _current_owner=Depends(require_roles(StaffRole.owner))
+    _current_owner=Depends(require_roles(StaffRole.owner, StaffRole.admin))
 ):
     staff = await service.create_staff(db, payload)
     return staff
@@ -26,7 +26,7 @@ async def create_staff(
 async def get_staff(
     id_staff: str,
     db: Session = Depends(get_db),
-    _current_owner=Depends(require_roles(StaffRole.owner))
+    _current_owner=Depends(require_roles(StaffRole.owner, StaffRole.admin))
 ):
     try:
         staff = await service.get_staff(db, id_staff)
@@ -36,7 +36,7 @@ async def get_staff(
 @router.get("/", response_model=list[schemas.StaffResponse])
 async def list_staff(
     db: Session = Depends(get_db),
-    _current_owner=Depends(require_roles(StaffRole.owner))
+    _current_owner=Depends(require_roles(StaffRole.owner, StaffRole.admin))
 ):
     staff_list = await service.list_staff(db)
     return staff_list

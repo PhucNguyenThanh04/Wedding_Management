@@ -26,3 +26,27 @@ def seed_owner(db: Session):
     db.add(owner)
     db.commit()
     print("Owner account created successfully")
+
+
+def seed_admin(db: Session):
+    existing_owner = db.query(Staff).filter(
+        Staff.role == StaffRole.admin
+    ).first()
+
+    if existing_owner:
+        print("admin already exists")
+        return
+
+    admin = Staff(
+        username="admin",
+        email="admin@gmail.com",
+        full_name="System admin",
+        phone="0333456789",
+        password_hash=hash_password("admin123"),
+        role=StaffRole.admin,
+        is_active=True
+    )
+
+    db.add(admin)
+    db.commit()
+    print("admin account created successfully")

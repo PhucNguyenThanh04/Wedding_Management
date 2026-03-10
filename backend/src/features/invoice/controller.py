@@ -26,7 +26,7 @@ invoice_router = APIRouter(
 async def get_order_invoice(
     order_id: int,
     db: Session = Depends(get_db),
-    _current_staff: Staff = Depends(require_roles(StaffRole.staff, StaffRole.owner))
+    _current_staff: Staff = Depends(require_roles(StaffRole.staff, StaffRole.owner, StaffRole.admin))
 ):
     return await service.get_invoice_by_order(db, order_id)
 
@@ -40,7 +40,7 @@ async def create_order_invoice(
     order_id: int,
     payload: schemas.InvoiceCreate,
     db: Session = Depends(get_db),
-    _current_staff: Staff = Depends(require_roles(StaffRole.staff, StaffRole.owner))
+    _current_staff: Staff = Depends(require_roles(StaffRole.staff, StaffRole.owner, StaffRole.admin))
 ):
     return await service.create_invoice_for_order(db, order_id, payload, _current_staff)
 
@@ -49,7 +49,7 @@ async def create_order_invoice(
 @invoice_router.get("/", response_model=schemas.InvoiceListResponse)
 async def list_all_invoices(
     db: Session = Depends(get_db),
-    _current_staff: Staff = Depends(require_roles(StaffRole.staff, StaffRole.owner))
+    _current_staff: Staff = Depends(require_roles(StaffRole.staff, StaffRole.owner, StaffRole.admin))
 ):
     """Danh sách tất cả hóa đơn"""
     invoices = await service.list_invoices(db)
@@ -63,7 +63,7 @@ async def list_all_invoices(
 async def get_invoice(
     invoice_id: int,
     db: Session = Depends(get_db),
-    _current_staff: Staff = Depends(require_roles(StaffRole.staff, StaffRole.owner))
+    _current_staff: Staff = Depends(require_roles(StaffRole.staff, StaffRole.owner, StaffRole.admin))
 ):
 
     return await service.get_invoice_by_id(db, invoice_id)
@@ -73,7 +73,7 @@ async def get_invoice(
 async def download_invoice_pdf(
     invoice_id: int,
     db: Session = Depends(get_db),
-    _current_staff: Staff = Depends(require_roles(StaffRole.staff, StaffRole.owner))
+    _current_staff: Staff = Depends(require_roles(StaffRole.staff, StaffRole.owner, StaffRole.admin))
 ):
 
     pdf_path = await service.get_invoice_pdf_path(db, invoice_id)

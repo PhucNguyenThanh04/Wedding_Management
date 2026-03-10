@@ -26,7 +26,7 @@ async def get_customers(
 async def create_customer(
         customer: schemas.CustomerCreate,
         db: Session = Depends(get_db),
-        _current_user=Depends(require_roles(StaffRole.staff))
+        _current_user=Depends(require_roles(StaffRole.staff, StaffRole.admin))
 ):
     new_customer = await service.create_customer(db, customer)
     return new_customer
@@ -57,7 +57,7 @@ async def update_customer(
         customer_id: int,
         payload: schemas.CustomerUpdate,
         db: Session = Depends(get_db),
-        _current_user=Depends(require_roles(StaffRole.staff))
+        _current_user=Depends(require_roles(StaffRole.staff, StaffRole.admin))
 ):
     customer = await service.update_customer(db, customer_id, payload)
     return customer
