@@ -104,7 +104,7 @@ async def request_password_reset(db: Session, email: str):
         db.commit()
 
         # Send email with the reset token
-        send_email(
+        await send_email(
             to=email,
             subject="Password Reset Request",
             body=f"Use this token to reset your password: {reset_token}"
