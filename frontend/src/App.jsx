@@ -11,7 +11,6 @@ import Customer from "./page/Dashboard/customer";
 import Staff from "./page/Dashboard/Staff";
 import DetailCustomer from "./page/Dashboard/customer/DetailCustomer";
 import DetailStaff from "./page/Dashboard/Staff/DetailStaff";
-import PrivateRoute from "./components/privateRouteAdmin";
 import LoginAdmin from "./page/Dashboard/auth/Login";
 import CustomerPage from "./page/customers";
 import HomePage from "./page/customers/HomePage";
@@ -20,8 +19,9 @@ import HallPage from "./page/customers/hall";
 import MenuPage from "./page/customers/menu";
 import ContactPage from "./page/customers/contact";
 import LoginAndRegister from "./page/customers/auth/loginandregister";
-import PrivateRouteAdmin from "./components/privateRouteAdmin";
 import OrderPage from "./page/customers/history";
+import PrivateRoute from "./components/privateRoute";
+import PrivateRouteAdmin from "./components/privateRouteAdmin";
 
 function App() {
   return (
@@ -42,9 +42,9 @@ function App() {
       <Route
         path="/dashboard"
         element={
-          <PrivateRouteAdmin>
+          <PrivateRoute>
             <Dashboard />
-          </PrivateRouteAdmin>
+          </PrivateRoute>
         }
       >
         <Route index element={<DashboardPage />} replace />
@@ -56,8 +56,22 @@ function App() {
         <Route path="menu" element={<Menu />} />
         <Route path="customers" element={<Customer />} />
         <Route path="customers/detail/:id" element={<DetailCustomer />} />
-        <Route path="staffs" element={<Staff />} />
-        <Route path="staffs/detail/:id" element={<DetailStaff />} />
+        <Route
+          path="staffs"
+          element={
+            <PrivateRouteAdmin>
+              <Staff />
+            </PrivateRouteAdmin>
+          }
+        />
+        <Route
+          path="staffs/detail/:id"
+          element={
+            <PrivateRouteAdmin>
+              <DetailStaff />
+            </PrivateRouteAdmin>
+          }
+        />
       </Route>
     </Routes>
   );

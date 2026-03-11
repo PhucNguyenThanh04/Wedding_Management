@@ -1,9 +1,8 @@
-import { Typography, Tag, Divider, Statistic, Timeline, Avatar } from "antd";
+import { Typography, Tag, Skeleton } from "antd";
 import {
   ArrowLeftOutlined,
   MailOutlined,
   PhoneOutlined,
-  UserOutlined,
   ShoppingOutlined,
   CalendarOutlined,
   EnvironmentOutlined,
@@ -13,64 +12,13 @@ import {
   ClockCircleOutlined,
 } from "@ant-design/icons";
 import { useTheme } from "../../../context/themeContext";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { useState } from "react";
 import ActionCustomer from "./ActionCustomer";
+import { useQuery } from "@tanstack/react-query";
+import { getCustomerById, getCustomerOrders } from "../../../apis/customer.api";
 
 const { Text, Title } = Typography;
-
-const MOCK_DETAIL = {
-  id: 1,
-  name: "Nguyễn Văn A",
-  email: "trungkien@gmail.com",
-  password: "123456",
-  phone: "0123456789",
-  image: "https://i.pravatar.cc/150?img=1",
-  totalSpent: 5000000,
-  joinDate: "2023-01-15",
-  address: "123 Lê Lợi, Quận 1, TP.HCM",
-  status: "active",
-  totalOrders: 24,
-  lastVisit: "2024-12-20",
-  note: "Khách hàng thân thiết, thường đặt bàn vào cuối tuần.",
-  orders: [
-    {
-      id: "HD001",
-      date: "2024-12-20",
-      amount: 450000,
-      status: "completed",
-      items: "Bò lúc lắc, Cơm chiên dương châu",
-    },
-    {
-      id: "HD002",
-      date: "2024-12-10",
-      amount: 320000,
-      status: "completed",
-      items: "Gà nướng mật ong, Canh chua",
-    },
-    {
-      id: "HD003",
-      date: "2024-11-28",
-      amount: 780000,
-      status: "completed",
-      items: "Lẩu thái, Hải sản hấp",
-    },
-    {
-      id: "HD004",
-      date: "2024-11-15",
-      amount: 210000,
-      status: "completed",
-      items: "Phở bò, Chả giò",
-    },
-    {
-      id: "HD005",
-      date: "2024-10-30",
-      amount: 560000,
-      status: "completed",
-      items: "Tôm hùm, Rau xào",
-    },
-  ],
-};
 
 const statusConfig = {
   active: { color: "green", label: "Đang hoạt động" },
@@ -88,16 +36,115 @@ const rankConfig = (totalSpent) => {
 function DetailCustomer() {
   const { t } = useTheme();
   const navigate = useNavigate();
-  const rank = rankConfig(MOCK_DETAIL.totalSpent);
-  const status = statusConfig[MOCK_DETAIL.status] || statusConfig.active;
+  const { id } = useParams();
   const [showEdit, setShowEdit] = useState(null);
-  console.log(showEdit);
+
+  const {
+    data: customer,
+    isLoading: isLoadingCustomer,
+    isError,
+  } = useQuery({
+    queryKey: ["customer", id],
+    queryFn: () => getCustomerById(id),
+    enabled: !!id,
+  });
+
+  const { data: orders = [], isLoading: isLoadingOrders } = useQuery({
+    queryKey: ["customer-orders", id],
+    queryFn: () => getCustomerOrders(id),
+    enabled: !!id,
+  });
 
   const cardStyle = {
     border: `1px solid ${t.border ?? "#e2e8f0"}`,
     borderRadius: 12,
     padding: "20px 24px",
   };
+
+  // Loading state
+  if (isLoadingCustomer) {
+    return (
+      <div
+        style={{
+          background: t.surface ?? "#f8fafc",
+          minHeight: "100vh",
+          padding: "2rem",
+        }}
+      >
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "320px 1fr",
+            gap: 20,
+            marginTop: 24,
+          }}
+        >
+          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+            <div style={{ ...cardStyle, textAlign: "center" }}>
+              <Skeleton.Avatar active size={90} style={{ marginBottom: 12 }} />
+              <Skeleton
+                active
+                title={{ width: 120 }}
+                paragraph={{ rows: 1, width: 80 }}
+              />
+            </div>
+            <div style={cardStyle}>
+              <Skeleton active paragraph={{ rows: 5 }} />
+            </div>
+            <div style={cardStyle}>
+              <Skeleton active paragraph={{ rows: 2 }} />
+            </div>
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(3, 1fr)",
+                gap: 14,
+              }}
+            >
+              {[1, 2, 3].map((i) => (
+                <div key={i} style={cardStyle}>
+                  <Skeleton active paragraph={{ rows: 1 }} />
+                </div>
+              ))}
+            </div>
+            <div style={cardStyle}>
+              <Skeleton active paragraph={{ rows: 6 }} />
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (isError || !customer) {
+    return (
+      <div
+        style={{
+          background: t.surface ?? "#f8fafc",
+          minHeight: "100vh",
+          padding: "2rem",
+        }}
+      >
+        <div className="flex flex-col items-center justify-center h-64 gap-4">
+          <Text type="danger" style={{ fontSize: 16 }}>
+            Không tìm thấy thông tin khách hàng.
+          </Text>
+          <button
+            onClick={() => navigate(-1)}
+            className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-md transition"
+          >
+            Quay lại
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  const rank = rankConfig(customer.total_spent ?? 0);
+  const status = statusConfig[customer.status] ?? statusConfig.active;
 
   return (
     <div
@@ -109,26 +156,24 @@ function DetailCustomer() {
       }}
     >
       <div className="flex items-center justify-between mb-2">
-        <div className="flex items-center gap-3">
-          <div>
-            <h2
-              style={{
-                margin: 0,
-                fontSize: 22,
-                fontWeight: 600,
-                color: t.text ?? "#1e293b",
-                lineHeight: 1.2,
-              }}
-            >
-              Chi Tiết Khách Hàng
-            </h2>
-            <Text type="secondary" style={{ fontSize: 16 }}>
-              Xem thông tin và lịch sử giao dịch
-            </Text>
-          </div>
+        <div>
+          <h2
+            style={{
+              margin: 0,
+              fontSize: 22,
+              fontWeight: 600,
+              color: t.text ?? "#1e293b",
+              lineHeight: 1.2,
+            }}
+          >
+            Chi Tiết Khách Hàng
+          </h2>
+          <Text type="secondary" style={{ fontSize: 16 }}>
+            Xem thông tin và lịch sử giao dịch
+          </Text>
         </div>
         <button
-          onClick={() => setShowEdit(MOCK_DETAIL)}
+          onClick={() => setShowEdit(customer)}
           className="bg-amber-500 hover:bg-amber-600 transition text-white px-5 py-2 rounded-md flex items-center gap-2"
           style={{ fontSize: 14 }}
         >
@@ -155,35 +200,32 @@ function DetailCustomer() {
       </button>
 
       <div
-        className="grid grid-cols-1 gap-5 mt-6"
-        style={{ display: "grid", gridTemplateColumns: "320px 1fr", gap: 20 }}
+        style={{
+          display: "grid",
+          gridTemplateColumns: "320px 1fr",
+          gap: 20,
+          marginTop: 24,
+        }}
       >
         <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
           <div style={{ ...cardStyle, textAlign: "center" }}>
-            <div
+            <img
+              src={customer.image ?? "https://i.pravatar.cc/150?img=1"}
+              alt={customer.full_name}
               style={{
-                position: "relative",
-                display: "inline-block",
+                width: 90,
+                height: 90,
+                borderRadius: "50%",
+                objectFit: "cover",
+                border: `3px solid ${rank.color}`,
                 marginBottom: 12,
               }}
-            >
-              <img
-                src={MOCK_DETAIL.image}
-                alt={MOCK_DETAIL.name}
-                style={{
-                  width: 90,
-                  height: 90,
-                  borderRadius: "50%",
-                  objectFit: "cover",
-                  border: `3px solid ${rank.color}`,
-                }}
-              />
-            </div>
+            />
             <Title
               level={4}
               style={{ margin: "0 0 4px", color: t.text ?? "#1e293b" }}
             >
-              {MOCK_DETAIL.name}
+              {customer.full_name}
             </Title>
             <div style={{ marginBottom: 10 }}>
               <Tag color={status.color}>{status.label}</Tag>
@@ -192,7 +234,7 @@ function DetailCustomer() {
               </Tag>
             </div>
             <Text type="secondary" style={{ fontSize: 16 }}>
-              #{MOCK_DETAIL.id.toString().padStart(4, "0")}
+              {/* #{customer.id?.slice(0, 8).toUpperCase()} */}
             </Text>
           </div>
 
@@ -213,31 +255,31 @@ function DetailCustomer() {
                 {
                   icon: <MailOutlined />,
                   label: "Email",
-                  value: MOCK_DETAIL.email,
+                  value: customer.email,
                 },
                 {
                   icon: <PhoneOutlined />,
                   label: "Điện thoại",
-                  value: MOCK_DETAIL.phone,
+                  value: customer.phone,
                 },
                 {
                   icon: <EnvironmentOutlined />,
                   label: "Địa chỉ",
-                  value: MOCK_DETAIL.address,
+                  value: customer.address,
                 },
                 {
                   icon: <CalendarOutlined />,
                   label: "Ngày tham gia",
-                  value: new Date(MOCK_DETAIL.joinDate).toLocaleDateString(
-                    "vi-VN",
-                  ),
+                  value: customer.created_at
+                    ? new Date(customer.created_at).toLocaleDateString("vi-VN")
+                    : "—",
                 },
                 {
                   icon: <ClockCircleOutlined />,
-                  label: "Lần cuối ghé",
-                  value: new Date(MOCK_DETAIL.lastVisit).toLocaleDateString(
-                    "vi-VN",
-                  ),
+                  label: "Cập nhật lần cuối",
+                  value: customer.updated_at
+                    ? new Date(customer.updated_at).toLocaleDateString("vi-VN")
+                    : "—",
                 },
               ].map((item, i) => (
                 <div
@@ -261,7 +303,7 @@ function DetailCustomer() {
                       {item.label}
                     </Text>
                     <Text style={{ color: t.text ?? "#1e293b", fontSize: 16 }}>
-                      {item.value}
+                      {item.value ?? "—"}
                     </Text>
                   </div>
                 </div>
@@ -282,7 +324,7 @@ function DetailCustomer() {
               Ghi chú
             </Text>
             <Text type="secondary" style={{ fontSize: 16, lineHeight: 1.6 }}>
-              {MOCK_DETAIL.note || "Chưa có ghi chú."}
+              {customer.note || "Chưa có ghi chú."}
             </Text>
           </div>
         </div>
@@ -301,7 +343,9 @@ function DetailCustomer() {
                   <RiseOutlined style={{ fontSize: 22, color: "#6366f1" }} />
                 ),
                 title: "Tổng chi tiêu",
-                value: MOCK_DETAIL.totalSpent.toLocaleString("vi-VN") + "đ",
+                value: customer.total_spent
+                  ? customer.total_spent.toLocaleString("vi-VN") + "đ"
+                  : "—",
                 bg: "#ede9fe",
               },
               {
@@ -311,7 +355,7 @@ function DetailCustomer() {
                   />
                 ),
                 title: "Số đơn hàng",
-                value: MOCK_DETAIL.totalOrders,
+                value: orders.length,
                 bg: "#e0f2fe",
               },
               {
@@ -369,79 +413,109 @@ function DetailCustomer() {
               <Text strong style={{ color: t.text ?? "#1e293b", fontSize: 15 }}>
                 Lịch sử đơn hàng
               </Text>
-              <Tag color="blue">{MOCK_DETAIL.orders.length} đơn</Tag>
+              <Tag color="blue">{orders.length} đơn</Tag>
             </div>
-            <table className="w-full border-collapse " style={{ fontSize: 16 }}>
-              <thead>
-                <tr
-                  style={{
-                    borderBottom: `1px solid ${t.border ?? "#e2e8f0"}`,
-                  }}
-                >
-                  {["Mã đơn", "Ngày đặt", "Món", "Giá trị", "Trạng thái"].map(
-                    (h) => (
-                      <th
-                        key={h}
-                        className="p-2 text-start"
-                        style={{ color: t.text ?? "#1e293b", fontWeight: 600 }}
-                      >
-                        {h}
-                      </th>
-                    ),
-                  )}
-                </tr>
-              </thead>
-              <tbody>
-                {MOCK_DETAIL.orders.map((order) => (
+
+            {isLoadingOrders ? (
+              <Skeleton active paragraph={{ rows: 5 }} />
+            ) : orders.length === 0 ? (
+              <Text type="secondary">Chưa có đơn hàng nào.</Text>
+            ) : (
+              <table
+                className="w-full border-collapse"
+                style={{ fontSize: 16 }}
+              >
+                <thead>
                   <tr
-                    key={order.id}
                     style={{
                       borderBottom: `1px solid ${t.border ?? "#e2e8f0"}`,
-                      color: t.text ?? "#1e293b",
                     }}
                   >
-                    <td className="p-2">
-                      <Text strong style={{ color: "#6366f1" }}>
-                        {order.id}
-                      </Text>
-                    </td>
-                    <td
-                      className="p-2 text-secondary"
-                      style={{ color: "#64748b" }}
-                    >
-                      {new Date(order.date).toLocaleDateString("vi-VN")}
-                    </td>
-                    <td className="p-2" style={{ maxWidth: 180 }}>
-                      <Text
-                        ellipsis={{ tooltip: order.items }}
-                        style={{
-                          color: t.text ?? "#1e293b",
-                          display: "block",
-                          maxWidth: 180,
-                        }}
-                      >
-                        {order.items}
-                      </Text>
-                    </td>
-                    <td className="p-2">
-                      <Text strong style={{ color: "#16a34a" }}>
-                        {order.amount.toLocaleString("vi-VN")}đ
-                      </Text>
-                    </td>
-                    <td className="p-2">
-                      <Tag color="green">Hoàn thành</Tag>
-                    </td>
+                    {["Mã đơn", "Ngày đặt", "Món", "Giá trị", "Trạng thái"].map(
+                      (h) => (
+                        <th
+                          key={h}
+                          className="p-2 text-start"
+                          style={{
+                            color: t.text ?? "#1e293b",
+                            fontWeight: 600,
+                          }}
+                        >
+                          {h}
+                        </th>
+                      ),
+                    )}
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {orders.map((order) => (
+                    <tr
+                      key={order.id}
+                      style={{
+                        borderBottom: `1px solid ${t.border ?? "#e2e8f0"}`,
+                        color: t.text ?? "#1e293b",
+                      }}
+                    >
+                      <td className="p-2">
+                        <Text strong style={{ color: "#6366f1" }}>
+                          #{order.id?.slice(0, 8).toUpperCase()}
+                        </Text>
+                      </td>
+                      <td className="p-2" style={{ color: "#64748b" }}>
+                        {order.created_at
+                          ? new Date(order.created_at).toLocaleDateString(
+                              "vi-VN",
+                            )
+                          : "—"}
+                      </td>
+                      <td className="p-2" style={{ maxWidth: 180 }}>
+                        <Text
+                          ellipsis={{ tooltip: order.items }}
+                          style={{
+                            color: t.text ?? "#1e293b",
+                            display: "block",
+                            maxWidth: 180,
+                          }}
+                        >
+                          {order.items ?? "—"}
+                        </Text>
+                      </td>
+                      <td className="p-2">
+                        <Text strong style={{ color: "#16a34a" }}>
+                          {order.total_amount
+                            ? order.total_amount.toLocaleString("vi-VN") + "đ"
+                            : "—"}
+                        </Text>
+                      </td>
+                      <td className="p-2">
+                        <Tag
+                          color={
+                            order.status === "completed"
+                              ? "green"
+                              : order.status === "pending"
+                                ? "orange"
+                                : "red"
+                          }
+                        >
+                          {order.status === "completed"
+                            ? "Hoàn thành"
+                            : order.status === "pending"
+                              ? "Đang xử lý"
+                              : "Đã huỷ"}
+                        </Tag>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
           </div>
         </div>
       </div>
 
       {showEdit && (
         <ActionCustomer
-          open={showEdit}
+          open={!!showEdit}
           action="edit"
           data={showEdit}
           onClose={() => setShowEdit(null)}

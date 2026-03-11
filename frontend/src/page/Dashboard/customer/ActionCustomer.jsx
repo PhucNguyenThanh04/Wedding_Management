@@ -1,29 +1,55 @@
 import { Form, Input, Modal } from "antd";
 import { useEffect } from "react";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faEyeSlash, faEye } from "@fortawesome/free-solid-svg-icons";
+import axiosInstance from "../../../config/axiosInstance";
+import { toast } from "react-toastify";
+import { useQueryClient } from "@tanstack/react-query";
 
 function ActionCustomer({ open, action, data, onClose }) {
   const [formCustomer] = Form.useForm();
+  const queryClient = useQueryClient();
 
   useEffect(() => {
     if (action === "edit" && data) {
       formCustomer.setFieldsValue({
-        name: data.name,
+        full_name: data.full_name,
         email: data.email,
         phone: data.phone,
         address: data.address,
-        password: data.password,
+        note: data.note,
       });
     } else {
       formCustomer.resetFields();
     }
   }, [action, data, formCustomer]);
 
-  const handleFinish = () => {
-    formCustomer.validateFields().then((values) => {
-      console.log(values);
-    });
+  const handleFinish = async (values) => {
+    const payload = {
+      full_name: values.full_name,
+      phone: values.phone,
+      email: values.email,
+      address: values.address,
+      note: values.note,
+    };
+    try {
+      let res;
+      if (action === "edit") {
+        res = await axiosInstance.put(`/customer/${data.id}`, payload);
+      } else {
+        res = await axiosInstance.post("/customer", payload);
+      }
+
+      if (res.status === 201 || res.status === 200) {
+        toast.success(
+          action === "edit"
+            ? "Cập nhật thông tin thành công!"
+            : "Tạo khách hàng thành công!",
+        );
+        await queryClient.invalidateQueries(["customers"]);
+        onClose();
+      }
+    } catch (error) {
+      toast.error(error.message || "Lỗi server! Vui lòng thử lại!");
+    }
   };
 
   return (
@@ -50,7 +76,7 @@ function ActionCustomer({ open, action, data, onClose }) {
       >
         <Form.Item
           label="Họ tên"
-          name="name"
+          name="full_name"
           rules={[
             { required: true, message: "Vui lòng nhập họ tên!" },
             { min: 3, message: "Tên phải có ít nhất 3 ký tự!" },
@@ -58,6 +84,7 @@ function ActionCustomer({ open, action, data, onClose }) {
         >
           <Input placeholder="Nhập họ tên khách hàng" style={{ height: 45 }} />
         </Form.Item>
+
         <div className="flex items-center gap-6 w-full">
           <Form.Item
             label="Email"
@@ -73,49 +100,39 @@ function ActionCustomer({ open, action, data, onClose }) {
               style={{ height: 45, width: "100%" }}
             />
           </Form.Item>
+
           <Form.Item
-            label="Password"
-            name="password"
+            label="Số điện thoại"
+            name="phone"
             style={{ width: "100%" }}
             rules={[
-              { required: true, message: "Vui lòng nhập password!" },
-              { type: "password", message: "password không đúng định dạng!" },
+              { required: true, message: "Vui lòng nhập số điện thoại!" },
+              {
+                pattern: /^[0-9]{10}$/,
+                message: "Số điện thoại phải có 10 chữ số!",
+              },
             ]}
           >
-            <Input.Password
-              placeholder="Nhập mật khẩu khách hàng"
+            <Input
+              placeholder="Nhập số điện thoại"
               style={{ height: 45, width: "100%" }}
-              iconRender={(visible) =>
-                visible ? (
-                  <FontAwesomeIcon icon={faEyeSlash} />
-                ) : (
-                  <FontAwesomeIcon icon={faEye} />
-                )
-              }
             />
           </Form.Item>
         </div>
-        <Form.Item
-          label="Số điện thoại"
-          name="phone"
-          rules={[
-            { required: true, message: "Vui lòng nhập số điện thoại!" },
-            {
-              pattern: /^[0-9]{10}$/,
-              message: "Số điện thoại phải có 10 chữ số!",
-            },
-          ]}
-        >
-          <Input
-            placeholder="Nhập số điện thoại khách hàng"
-            style={{ height: 45 }}
-          />
-        </Form.Item>
+
         <Form.Item label="Địa chỉ" name="address">
           <Input placeholder="Nhập địa chỉ khách hàng" style={{ height: 45 }} />
         </Form.Item>
 
-        <div className="flex items-center justify-end mt-6 ">
+        <Form.Item label="Ghi chú" name="note">
+          <Input.TextArea
+            placeholder="Nhập ghi chú về khách hàng"
+            rows={3}
+            style={{ resize: "none" }}
+          />
+        </Form.Item>
+
+        <div className="flex items-center justify-end mt-6">
           <button
             className="px-8 py-4 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition-colors mr-2"
             onClick={onClose}

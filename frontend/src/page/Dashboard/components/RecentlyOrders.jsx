@@ -82,14 +82,12 @@ function RecentlyOrder() {
   const { t } = useTheme();
   return (
     <Card
-      bordered={false}
       style={{
         background: t.surface,
         border: `1px solid ${t.border}`,
         borderRadius: 12,
         transition: "background .3s",
       }}
-      bodyStyle={{ padding: 20 }}
     >
       <div
         style={{

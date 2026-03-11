@@ -1,7 +1,9 @@
-import { Form, Input, Modal } from "antd";
+import { Form, Input, Modal, Select } from "antd";
 import { useEffect } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faEyeSlash, faEye } from "@fortawesome/free-solid-svg-icons";
+import { toast } from "react-toastify";
+import axiosInstance from "../../../config/axiosInstance";
 
 function ActionStaff({ open, action, data, onClose }) {
   const [formStaff] = Form.useForm();
@@ -9,21 +11,36 @@ function ActionStaff({ open, action, data, onClose }) {
   useEffect(() => {
     if (action === "edit" && data) {
       formStaff.setFieldsValue({
-        name: data.name,
+        username: data.username,
         email: data.email,
-        phone: data.phone,
-        address: data.address,
+        full_name: data.full_name,
         password: data.password,
+        role: data.role,
+        phone: data.phone,
       });
     } else {
       formStaff.resetFields();
     }
   }, [action, data, formStaff]);
 
-  const handleFinish = () => {
-    formStaff.validateFields().then((values) => {
-      console.log(values);
-    });
+  const handleFinish = async (values) => {
+    try {
+      const payload = {
+        username: values.username,
+        email: values.email,
+        full_name: values.full_name,
+        password: values.password,
+        role: values.role,
+        phone: values.phone,
+      };
+      const res = await axiosInstance.post("/staff", payload);
+      if (res.status === 201) {
+        toast.success("Tạo nhân viên thành công!");
+        onClose();
+      }
+    } catch (error) {
+      toast.error(error.message || "Lỗi server!");
+    }
   };
 
   return (
@@ -49,8 +66,19 @@ function ActionStaff({ open, action, data, onClose }) {
         }}
       >
         <Form.Item
+          label="Tên đăng nhập"
+          name="username"
+          rules={[
+            { required: true, message: "Vui lòng nhập tên đăng nhập!" },
+            { min: 3, message: "Tên đăng nhập phải có ít nhất 3 ký tự!" },
+          ]}
+        >
+          <Input placeholder="Nhập tên đăng nhập" style={{ height: 45 }} />
+        </Form.Item>
+
+        <Form.Item
           label="Họ tên"
-          name="name"
+          name="full_name"
           rules={[
             { required: true, message: "Vui lòng nhập họ tên!" },
             { min: 3, message: "Tên phải có ít nhất 3 ký tự!" },
@@ -58,6 +86,7 @@ function ActionStaff({ open, action, data, onClose }) {
         >
           <Input placeholder="Nhập họ tên nhân viên" style={{ height: 45 }} />
         </Form.Item>
+
         <div className="flex items-center gap-6 w-full">
           <Form.Item
             label="Email"
@@ -73,13 +102,14 @@ function ActionStaff({ open, action, data, onClose }) {
               style={{ height: 45, width: "100%" }}
             />
           </Form.Item>
+
           <Form.Item
-            label="Password"
+            label="Mật khẩu"
             name="password"
             style={{ width: "100%" }}
             rules={[
-              { required: true, message: "Vui lòng nhập password!" },
-              { type: "password", message: "password không đúng định dạng!" },
+              { required: true, message: "Vui lòng nhập mật khẩu!" },
+              { min: 6, message: "Mật khẩu phải có ít nhất 6 ký tự!" },
             ]}
           >
             <Input.Password
@@ -95,27 +125,41 @@ function ActionStaff({ open, action, data, onClose }) {
             />
           </Form.Item>
         </div>
-        <Form.Item
-          label="Số điện thoại"
-          name="phone"
-          rules={[
-            { required: true, message: "Vui lòng nhập số điện thoại!" },
-            {
-              pattern: /^[0-9]{10}$/,
-              message: "Số điện thoại phải có 10 chữ số!",
-            },
-          ]}
-        >
-          <Input
-            placeholder="Nhập số điện thoại nhân viên"
-            style={{ height: 45 }}
-          />
-        </Form.Item>
-        <Form.Item label="Địa chỉ" name="address">
-          <Input placeholder="Nhập địa chỉ nhân viên" style={{ height: 45 }} />
-        </Form.Item>
 
-        <div className="flex items-center justify-end mt-6 ">
+        <div className="flex items-center gap-6 w-full">
+          <Form.Item
+            label="Số điện thoại"
+            name="phone"
+            style={{ width: "100%" }}
+            rules={[
+              { required: true, message: "Vui lòng nhập số điện thoại!" },
+              {
+                pattern: /^[0-9]{10}$/,
+                message: "Số điện thoại phải có 10 chữ số!",
+              },
+            ]}
+          >
+            <Input
+              placeholder="Nhập số điện thoại"
+              style={{ height: 45, width: "100%" }}
+            />
+          </Form.Item>
+
+          <Form.Item
+            label="Vai trò"
+            name="role"
+            style={{ width: "100%" }}
+            rules={[{ required: true, message: "Vui lòng chọn vai trò!" }]}
+            initialValue="staff"
+          >
+            <Select style={{ height: 45 }}>
+              <Select.Option value="staff">Nhân viên</Select.Option>
+              <Select.Option value="admin">Quản trị viên</Select.Option>
+            </Select>
+          </Form.Item>
+        </div>
+
+        <div className="flex items-center justify-end mt-6">
           <button
             className="px-8 py-4 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition-colors mr-2"
             onClick={onClose}

@@ -12,8 +12,8 @@ import {
   faClose,
 } from "@fortawesome/free-solid-svg-icons";
 import { Link, useNavigate } from "react-router-dom";
-import { useUser } from "../../../../hooks/useUser";
 import thai from "../../../../assets/images/thai.jpg";
+import { useAuth } from "../../../../hooks/useAuth";
 
 const NAV_LINKS = [
   { label: "Giới thiệu", href: "/about" },
@@ -25,7 +25,7 @@ const NAV_LINKS = [
 function Header({ isBg }) {
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
-  const { user } = useUser();
+  const { user } = useAuth();
   const elementRef = useRef(null);
   const [showPersonalModal, setShowPersonalModal] = useState(false);
   const navigate = useNavigate();

@@ -23,7 +23,7 @@ const NAV_ITEMS = [
 
   { type: "divider" },
 
-  { key: "menu", icon: <ForkOutlined />, label: "Thực đơn & Gói tiệc" },
+  { key: "menu", icon: <ForkOutlined />, label: "Thực đơn" },
   { key: "customers", icon: <UserOutlined />, label: "Khách hàng" },
   { key: "staffs", icon: <TeamOutlined />, label: "Nhân sự" },
 

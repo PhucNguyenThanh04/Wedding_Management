@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Form, Input, Button, Checkbox, message } from "antd";
 import { MailOutlined, LockOutlined } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
+import axiosInstance from "../../../config/axiosInstance";
 
 function LoginAdmin() {
   const [loading, setLoading] = useState(false);
@@ -10,14 +11,24 @@ function LoginAdmin() {
 
   const handleSubmit = async (values) => {
     setLoading(true);
-    await new Promise((r) => setTimeout(r, 1200));
-    setLoading(false);
-    if (values.email === "admin@wedding.vn" && values.password === "admin123") {
-      localStorage.setItem("admin", JSON.stringify({ email: values.email }));
-      navigate("/dashboard");
-      message.success("Đăng nhập thành công!");
-    } else {
-      message.error("Email hoặc mật khẩu không đúng.");
+    try {
+      const formData = new FormData();
+      formData.append("username", values.username);
+      formData.append("password", values.password);
+      const res = await axiosInstance.post("/auth/login", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+      if (res.status === 200) {
+        localStorage.setItem("access_token", res.data.access_token);
+        navigate("/dashboard");
+      }
+    } catch (error) {
+      console.log(error);
+      message.success(error.message || "Lỗi server! Vui lòng thử lại!");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -34,7 +45,7 @@ function LoginAdmin() {
       className="relative"
     >
       <div className="absolute top-6 right-6 p-8 bg-white rounded-lg shadow-md text-gray-600">
-        <div>email: admin@wedding.vn</div>
+        <div>username: admin</div>
         <div>pass: admin123</div>
       </div>
       <div
@@ -47,7 +58,6 @@ function LoginAdmin() {
           boxShadow: "0 4px 24px rgba(0,0,0,0.08)",
         }}
       >
-        {/* Logo */}
         <div style={{ textAlign: "center", marginBottom: 32 }}>
           <div
             style={{
@@ -86,11 +96,11 @@ function LoginAdmin() {
           requiredMark={false}
         >
           <Form.Item
-            name="email"
-            label="Email"
+            name="username"
+            label="Username"
             rules={[
-              { required: true, message: "Vui lòng nhập email" },
-              { type: "email", message: "Email không hợp lệ" },
+              { required: true, message: "Vui lòng nhập username" },
+              { type: "username", message: "Username không hợp lệ" },
             ]}
           >
             <Input

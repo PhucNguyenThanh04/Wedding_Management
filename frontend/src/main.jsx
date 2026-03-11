@@ -5,6 +5,10 @@ import App from "./App.jsx";
 import { BrowserRouter as Router } from "react-router-dom";
 import { ToastContainer, Bounce } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { AuthProvider } from "./context/authContext.jsx";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+
+const queryClient = new QueryClient();
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>
@@ -22,7 +26,11 @@ createRoot(document.getElementById("root")).render(
         theme="light"
         transition={Bounce}
       ></ToastContainer>
-      <App />
+      <AuthProvider>
+        <QueryClientProvider client={queryClient}>
+          <App />
+        </QueryClientProvider>
+      </AuthProvider>
     </Router>
   </StrictMode>,
 );
