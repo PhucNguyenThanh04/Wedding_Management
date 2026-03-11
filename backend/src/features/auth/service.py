@@ -1,3 +1,4 @@
+import re
 from typing import Tuple
 from sqlalchemy.orm import Session
 from sqlalchemy import or_
@@ -121,9 +122,15 @@ def reset_password(db: Session, reset_token: str, new_password: str):
         user = db.query(model.Staff).filter(model.Staff.reset_token == reset_token).first()
         if not user:
             raise HTTPException(status_code=400, detail="Invalid or expired reset token")
+        if len(new_password) < 8:
+            raise ValueError("Password must be at least 8 characters")
+        if (not re.search(r"[A-Z]", new_password) or
+                not re.search(r"[a-z]", new_password) or
+                not re.search(r"[0-9]", new_password)):
+            raise ValueError("Password phải có ít nhất một chữ hoa, một chữ thường và một số")
 
         user.password_hash = hash_password(new_password)
-        user.reset_token = None  # Clear the reset token
+        user.reset_token = None
         db.add(user)
         db.commit()
         return {"detail": "Password reset successful"}

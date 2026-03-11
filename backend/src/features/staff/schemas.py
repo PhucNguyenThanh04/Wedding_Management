@@ -23,8 +23,6 @@ class CreateStaffRequest(BaseModel):
     def username_must_be_valid(cls, v: str) -> str:
         if len(v) < 3:
             raise ValueError("Username must be at least 3 characters")
-        if not re.match(r"^[a-zA-Z0-9_]+$", v):
-            raise ValueError("Username must contain only letters, numbers, and underscores")
         return v
 
     @field_validator("password")
@@ -32,6 +30,8 @@ class CreateStaffRequest(BaseModel):
     def password_must_be_strong(cls, v: str) -> str:
         if len(v) < 8:
             raise ValueError("Password must be at least 8 characters")
+        if not re.search(r"[A-Z]", v) or not re.search(r"[a-z]", v) or not re.search(r"[0-9]", v):
+            raise ValueError("Password phải có ít nhất một chữ hoa, một chữ thường và một số")
         return v
 
     @field_validator("phone")
