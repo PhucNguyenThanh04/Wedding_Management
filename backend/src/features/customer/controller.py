@@ -1,7 +1,7 @@
 from fastapi import APIRouter, status, Depends
 from src.features.customer import service, schemas
 from typing import List
-from src.core.enums import StaffRole
+from src.core.enums import StaffRole, OrderStatus
 from sqlalchemy.orm import Session
 from src.core.database import get_db
 from src.core.security import get_current_user, require_roles
@@ -66,7 +66,11 @@ async def update_customer(
 async def get_customer_orders(
     customer_id: int,
     db: Session = Depends(get_db),
-    _current_user=Depends(get_current_user)
+    # _current_user=Depends(get_current_user)
 ):
     oder_by_id = await service.get_orders_by_customer(db, customer_id)
+    for order in oder_by_id:
+        if order.status == OrderStatus.cancelled or order.status == OrderStatus.completed\
+                or order.status == OrderStatus.invoiced:
+            oder_by_id.remove(order)
     return oder_by_id
