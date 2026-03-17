@@ -21,34 +21,45 @@ import {
 import { useState, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import ActionMenu from "./ActionMenu";
+import DishSelectorModal from "./DishselectorModal";
 import axiosInstance from "../../../config/axiosInstance";
 import { toast } from "react-toastify";
+import { useNavigate } from "react-router-dom";
 
 const { Text } = Typography;
 
-const formatVND = (v: number) =>
+const formatVND = (v) =>
   new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(
     v,
   );
 
 const getMenus = async () => {
-  const res = await axiosInstance.get("/menus/");
+  const res = await axiosInstance.get("/menus");
   return res.data;
 };
-const createMenu = async (data: any) => {
+
+const createMenu = async (data) => {
   const res = await axiosInstance.post("/menus/", data);
   return res.data;
 };
-const updateMenu = async ({ id, data }: any) => {
+
+const updateMenu = async ({ id, data }) => {
   const res = await axiosInstance.put(`/menus/${id}`, data);
   return res.data;
 };
-const deleteMenu = async (id: number) => {
+
+const deleteMenu = async (id) => {
   const res = await axiosInstance.delete(`/menus/${id}`);
   return res.data;
 };
-const toggleMenuActive = async (id: number) => {
+
+const toggleMenuActive = async (id) => {
   const res = await axiosInstance.patch(`/menus/${id}/is_active`);
+  return res.data;
+};
+
+const getDishes = async () => {
+  const res = await axiosInstance.get("/dishes");
   return res.data;
 };
 
@@ -60,27 +71,35 @@ function Menu() {
       return null;
     }
   })();
+  const navigate = useNavigate();
   const t = themeCtx?.t ?? { surface: "#f8fafc", text: "#1e293b" };
   const queryClient = useQueryClient();
 
   const [search, setSearch] = useState("");
   const [menuModalOpen, setMenuModalOpen] = useState(false);
-  const [editingMenu, setEditingMenu] = useState<any | null>(null);
+  const [editingMenu, setEditingMenu] = useState(null);
+  const [dishModalOpen, setDishModalOpen] = useState(false);
+  const [selectedMenu, setSelectedMenu] = useState(null);
 
   const { data: menus = [], isLoading } = useQuery({
     queryKey: ["menus"],
     queryFn: getMenus,
   });
 
+  const { data: dishes = [] } = useQuery({
+    queryKey: ["dishes"],
+    queryFn: getDishes,
+  });
+
   const createMenuMutation = useMutation({
     mutationFn: createMenu,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["menus"] });
-      toast.success("Tạo menu thành công!");
+      toast.success("Tạo combo thành công!");
       setMenuModalOpen(false);
       setEditingMenu(null);
     },
-    onError: (e: any) => toast.error(e.response?.data?.detail || "Lỗi server!"),
+    onError: (e) => toast.error(e.response?.data?.detail || "Lỗi server!"),
   });
 
   const updateMenuMutation = useMutation({
@@ -91,33 +110,47 @@ function Menu() {
       setMenuModalOpen(false);
       setEditingMenu(null);
     },
-    onError: (e: any) => toast.error(e.response?.data?.detail || "Lỗi server!"),
+    onError: (e) => toast.error(e.response?.data?.detail || "Lỗi server!"),
   });
 
   const deleteMenuMutation = useMutation({
     mutationFn: deleteMenu,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["menus"] });
-      toast.success("Đã xóa menu!");
+      toast.success("Đã xóa combo!");
     },
-    onError: (e: any) => toast.error(e.response?.data?.detail || "Lỗi server!"),
+    onError: (e) => toast.error(e.response?.data?.detail || "Lỗi server!"),
   });
 
   const toggleActiveMutation = useMutation({
     mutationFn: toggleMenuActive,
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["menus"] }),
-    onError: (e: any) => toast.error(e.response?.data?.detail || "Lỗi server!"),
+    onError: (e) => toast.error(e.response?.data?.detail || "Lỗi server!"),
+  });
+
+  const addDishesToMenuMutation = useMutation({
+    mutationFn: async ({ menuId, dishes }) => {
+      const res = await axiosInstance.post(`/menus/${menuId}/dishes`, {
+        dish_ids: dishes.map((d) => d.id),
+      });
+      return res.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["menus"] });
+      toast.success("Cập nhật món ăn thành công!");
+      setDishModalOpen(false);
+      setSelectedMenu(null);
+    },
+    onError: (e) => toast.error(e.response?.data?.detail || "Lỗi server!"),
   });
 
   const filteredMenus = useMemo(
     () =>
-      menus.filter((m: any) =>
-        m.name?.toLowerCase().includes(search.toLowerCase()),
-      ),
+      menus.filter((m) => m.name?.toLowerCase().includes(search.toLowerCase())),
     [menus, search],
   );
 
-  const handleMenuSave = (values: any) => {
+  const handleMenuSave = (values) => {
     if (editingMenu) {
       updateMenuMutation.mutate({ id: editingMenu.id, data: values });
     } else {
@@ -125,12 +158,13 @@ function Menu() {
     }
   };
 
-  const activeCount = menus.filter((m: any) => m.is_active).length;
+  const activeCount = menus.filter((m) => m.is_active).length;
 
-  const MenuGridCard = ({ item }: { item: any }) => (
+  const MenuGridCard = ({ item }) => (
     <Card
       hoverable
       style={{ borderRadius: 12, overflow: "hidden" }}
+      onClick={() => navigate(`/dashboard/menu/${item.id}`)}
       cover={
         item.image_url ? (
           <img
@@ -188,6 +222,15 @@ function Menu() {
         {formatVND(item.price)}/khách
       </div>
 
+      {item.dishes?.length > 0 && (
+        <Text
+          type="secondary"
+          style={{ fontSize: 12, display: "block", marginBottom: 6 }}
+        >
+          {item.dishes.length} món · {item.dishes.map((d) => d.name).join(", ")}
+        </Text>
+      )}
+
       <Text
         type="secondary"
         style={{ fontSize: 12, display: "block", marginBottom: 12 }}
@@ -206,6 +249,7 @@ function Menu() {
             {item.is_active ? "Tắt" : "Bật"}
           </Button>
         </Tooltip>
+
         <Tooltip title="Sửa">
           <Button
             size="small"
@@ -217,8 +261,9 @@ function Menu() {
             }}
           />
         </Tooltip>
+
         <Popconfirm
-          title="Xóa menu này?"
+          title="Xóa combo này?"
           onConfirm={() => deleteMenuMutation.mutate(item.id)}
           okText="Xóa"
           cancelText="Huỷ"
@@ -233,6 +278,18 @@ function Menu() {
             />
           </Tooltip>
         </Popconfirm>
+
+        <Tooltip title="Quản lý món ăn">
+          <Button
+            size="small"
+            icon={<PlusOutlined />}
+            block
+            onClick={() => {
+              setSelectedMenu(item);
+              setDishModalOpen(true);
+            }}
+          />
+        </Tooltip>
       </div>
     </Card>
   );
@@ -263,9 +320,9 @@ function Menu() {
               lineHeight: 1.2,
             }}
           >
-            Quản Lý Thực Đơn
+            Quản Lý Combo
           </h2>
-          <Text type="secondary">Quản lý toàn bộ thực đơn của nhà hàng</Text>
+          <Text type="secondary">Quản lý toàn bộ combo của nhà hàng</Text>
         </div>
         <Button
           type="primary"
@@ -277,7 +334,7 @@ function Menu() {
           }}
           style={{ borderRadius: 8, fontWeight: 600 }}
         >
-          Thêm menu
+          Thêm combo
         </Button>
       </div>
 
@@ -290,7 +347,7 @@ function Menu() {
         }}
       >
         {[
-          { title: "Tổng menu", value: menus.length, color: "#3b82f6" },
+          { title: "Tổng combo", value: menus.length, color: "#3b82f6" },
           { title: "Đang bán", value: activeCount, color: "#22c55e" },
           {
             title: "Tạm ngưng",
@@ -299,6 +356,7 @@ function Menu() {
           },
         ].map((s) => (
           <Card
+            size="small"
             key={s.title}
             style={{ borderRadius: 12, border: "1px solid #e2e8f0" }}
           >
@@ -314,7 +372,7 @@ function Menu() {
 
       <div style={{ marginBottom: 20 }}>
         <Input
-          placeholder="Tìm menu..."
+          placeholder="Tìm combo..."
           prefix={<SearchOutlined />}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
@@ -326,6 +384,7 @@ function Menu() {
       {isLoading ? (
         <div
           style={{
+            width: "100%",
             display: "grid",
             gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))",
             gap: 16,
@@ -335,7 +394,7 @@ function Menu() {
             <Card key={i} style={{ borderRadius: 12 }}>
               <Skeleton.Image
                 active
-                style={{ width: "100%", height: 160, marginBottom: 12 }}
+                style={{ width: "20rem", height: 160, marginBottom: 12 }}
               />
               <Skeleton active paragraph={{ rows: 3 }} />
             </Card>
@@ -346,7 +405,7 @@ function Menu() {
           style={{ textAlign: "center", padding: "60px 0", color: "#94a3b8" }}
         >
           <AppstoreOutlined style={{ fontSize: 48, marginBottom: 12 }} />
-          <div>Không có menu nào</div>
+          <div>Không có combo nào</div>
         </div>
       ) : (
         <div
@@ -356,7 +415,7 @@ function Menu() {
             gap: 16,
           }}
         >
-          {filteredMenus.map((item: any) => (
+          {filteredMenus.map((item) => (
             <MenuGridCard key={item.id} item={item} />
           ))}
         </div>
@@ -371,6 +430,28 @@ function Menu() {
           setEditingMenu(null);
         }}
         isLoading={createMenuMutation.isPending || updateMenuMutation.isPending}
+      />
+
+      <DishSelectorModal
+        open={dishModalOpen}
+        dishes={dishes}
+        value={
+          selectedMenu?.dishes?.map((d) => ({
+            id: d.id,
+            quantity: d.quantity ?? 1,
+          })) ?? []
+        }
+        onChange={(selected) => {
+          addDishesToMenuMutation.mutate({
+            menuId: selectedMenu.id,
+            dishes: selected,
+          });
+        }}
+        onCancel={() => {
+          setDishModalOpen(false);
+          setSelectedMenu(null);
+        }}
+        isLoading={addDishesToMenuMutation.isPending}
       />
     </div>
   );

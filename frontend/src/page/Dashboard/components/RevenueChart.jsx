@@ -1,28 +1,144 @@
-import { Card, Space, Typography } from "antd";
+import { Card, Space, Segmented } from "antd";
 import { useTheme } from "../../../context/themeContext";
+import { useQuery } from "@tanstack/react-query";
+import { useMemo } from "react";
+import { getRevenue } from "../../../apis/revenue.api";
+import { Line } from "react-chartjs-2";
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend,
+  Filler,
+} from "chart.js";
+
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend,
+  Filler,
+);
+
+function formatVND(num) {
+  return Number(num).toLocaleString("vi-VN") + "đ";
+}
+
+function formatShort(num) {
+  if (num >= 1_000_000_000) return (num / 1_000_000_000).toFixed(1) + "B";
+  if (num >= 1_000_000) return (num / 1_000_000).toFixed(1) + "M";
+  if (num >= 1_000) return (num / 1_000).toFixed(0) + "K";
+  return num.toString();
+}
 
 function RevenueChart() {
   const { t } = useTheme();
-  const { Text } = Typography;
-  const months = [
-    "T3",
-    "T4",
-    "T5",
-    "T6",
-    "T7",
-    "T8",
-    "T9",
-    "T10",
-    "T11",
-    "T12",
-    "T1",
-    "T2",
-  ];
-  const xPos = months.map((_, i) => Math.round(i * (600 / 11)));
-  const textAlpha =
-    t.key === "light" ? "rgba(0,0,0,0.4)" : "rgba(255,255,255,0.3)";
-  const gridAlpha =
-    t.key === "light" ? "rgba(0,0,0,0.06)" : "rgba(255,255,255,0.05)";
+  const periodType = "month";
+  const currentYear = new Date().getFullYear();
+
+  const { data: apiData, isLoading } = useQuery({
+    queryKey: ["revenue", periodType, currentYear],
+    queryFn: () => getRevenue({ period_type: periodType, year: currentYear }),
+  });
+
+  const items = apiData?.data?.items ?? [];
+  const grandTotal = apiData?.data?.grand_total
+    ? Number(apiData.data.grand_total)
+    : null;
+
+  const chartData = useMemo(
+    () => ({
+      labels: items.map((i) => i.period),
+      datasets: [
+        {
+          label: "Doanh thu",
+          data: items.map((i) => Number(i.total_revenue)),
+          borderColor: "#4f8ef7",
+          backgroundColor: (ctx) => {
+            const chart = ctx.chart;
+            const { ctx: canvas, chartArea } = chart;
+            if (!chartArea) return "rgba(79,142,247,0.15)";
+            const gradient = canvas.createLinearGradient(
+              0,
+              chartArea.top,
+              0,
+              chartArea.bottom,
+            );
+            gradient.addColorStop(0, "rgba(79,142,247,0.25)");
+            gradient.addColorStop(1, "rgba(79,142,247,0)");
+            return gradient;
+          },
+          borderWidth: 1,
+          tension: 0.4,
+          fill: true,
+          pointRadius: 4,
+          pointHoverRadius: 6,
+          pointBackgroundColor: "#fff",
+          pointBorderColor: "#4f8ef7",
+          pointBorderWidth: 2,
+        },
+      ],
+    }),
+    [items],
+  );
+
+  const options = useMemo(
+    () => ({
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: {
+        mode: "index",
+        intersect: false,
+      },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: t.key === "light" ? "#1e293b" : "#f1f5f9",
+          titleColor: t.key === "light" ? "#fff" : "#1e293b",
+          bodyColor: "#4f8ef7",
+          padding: 10,
+          cornerRadius: 8,
+          callbacks: {
+            label: (ctx) =>
+              `${formatVND(ctx.raw)}  ·  ${items[ctx.dataIndex]?.total_orders ?? 0} đơn`,
+          },
+        },
+      },
+      scales: {
+        x: {
+          grid: {
+            color:
+              t.key === "light" ? "rgba(0,0,0,0.06)" : "rgba(255,255,255,0.05)",
+          },
+          ticks: {
+            color:
+              t.key === "light" ? "rgba(0,0,0,0.4)" : "rgba(255,255,255,0.3)",
+            font: { size: 11 },
+          },
+        },
+        y: {
+          grid: {
+            color:
+              t.key === "light" ? "rgba(0,0,0,0.06)" : "rgba(255,255,255,0.05)",
+          },
+          ticks: {
+            color:
+              t.key === "light" ? "rgba(0,0,0,0.4)" : "rgba(255,255,255,0.3)",
+            font: { size: 11 },
+            callback: (v) => formatShort(v),
+          },
+        },
+      },
+    }),
+    [t, items],
+  );
 
   return (
     <Card
@@ -39,6 +155,8 @@ function RevenueChart() {
           alignItems: "start",
           justifyContent: "space-between",
           marginBottom: 20,
+          flexWrap: "wrap",
+          gap: 12,
         }}
       >
         <div>
@@ -46,83 +164,53 @@ function RevenueChart() {
             Tổng quan doanh thu
           </div>
           <div style={{ fontSize: 12, color: t.textMuted, marginTop: 2 }}>
-            Biến động 12 tháng gần nhất
+            {periodType === "month" ? "Theo tháng" : "Theo quý"} — {currentYear}
+            {grandTotal !== null && (
+              <span
+                style={{ marginLeft: 8, color: "#4f8ef7", fontWeight: 600 }}
+              >
+                Tổng: {formatVND(grandTotal)}
+              </span>
+            )}
           </div>
         </div>
-        <Space size={16}>
-          <Text style={{ fontSize: 16, fontWeight: 600, color: "#4f8ef7" }}>
+
+        <Space size={12} wrap>
+          <span style={{ fontSize: 14, fontWeight: 600, color: "#4f8ef7" }}>
             ● Doanh thu
-          </Text>
-          <Text style={{ fontSize: 16, fontWeight: 600, color: "#22d3a5" }}>
-            ● Lợi nhuận
-          </Text>
+          </span>
         </Space>
       </div>
-      <svg
-        viewBox="0 0 600 180"
-        height={280}
-        style={{ width: "100%", overflow: "visible" }}
-      >
-        <defs>
-          <linearGradient id="g1" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#4f8ef7" stopOpacity="0.25" />
-            <stop offset="100%" stopColor="#4f8ef7" stopOpacity="0" />
-          </linearGradient>
-          <linearGradient id="g2" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#22d3a5" stopOpacity="0.2" />
-            <stop offset="100%" stopColor="#22d3a5" stopOpacity="0" />
-          </linearGradient>
-        </defs>
-        {[36, 72, 108, 144].map((y) => (
-          <line
-            key={y}
-            x1="0"
-            y1={y}
-            x2="600"
-            y2={y}
-            stroke={gridAlpha}
-            strokeWidth="1"
-          />
-        ))}
-        <path
-          d="M0,120 C30,110 60,90 100,80 C140,70 160,55 200,45 C240,35 260,50 300,40 C340,30 360,20 400,28 C440,36 460,15 500,10 C530,7 560,12 600,8 L600,180 L0,180Z"
-          fill="url(#g1)"
-        />
-        <path
-          d="M0,150 C30,145 60,138 100,130 C140,122 160,115 200,108 C240,101 260,110 300,100 C340,90 360,75 400,78 C440,81 460,65 500,60 C530,56 560,60 600,55 L600,180 L0,180Z"
-          fill="url(#g2)"
-        />
-        <path
-          d="M0,120 C30,110 60,90 100,80 C140,70 160,55 200,45 C240,35 260,50 300,40 C340,30 360,20 400,28 C440,36 460,15 500,10 C530,7 560,12 600,8"
-          fill="none"
-          stroke="#4f8ef7"
-          strokeWidth="2.5"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-        <path
-          d="M0,150 C30,145 60,138 100,130 C140,122 160,115 200,108 C240,101 260,110 300,100 C340,90 360,75 400,78 C440,81 460,65 500,60 C530,56 560,60 600,55"
-          fill="none"
-          stroke="#22d3a5"
-          strokeWidth="2.5"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-        <circle cx="500" cy="10" r="4" fill="#4f8ef7" />
-        <circle cx="500" cy="60" r="4" fill="#22d3a5" />
-        {months.map((m, i) => (
-          <text
-            key={m}
-            x={xPos[i]}
-            y="175"
-            fill={textAlpha}
-            fontSize="9"
-            fontFamily="sans-serif"
-          >
-            {m}
-          </text>
-        ))}
-      </svg>
+
+      {isLoading ? (
+        <div
+          style={{
+            height: 280,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            color: t.textMuted,
+          }}
+        >
+          Đang tải...
+        </div>
+      ) : items.length === 0 ? (
+        <div
+          style={{
+            height: 280,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            color: t.textMuted,
+          }}
+        >
+          Không có dữ liệu
+        </div>
+      ) : (
+        <div style={{ height: 280 }}>
+          <Line data={chartData} options={options} />
+        </div>
+      )}
     </Card>
   );
 }

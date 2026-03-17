@@ -4,10 +4,11 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faEyeSlash, faEye } from "@fortawesome/free-solid-svg-icons";
 import { toast } from "react-toastify";
 import axiosInstance from "../../../config/axiosInstance";
+import { useQueryClient } from "@tanstack/react-query";
 
 function ActionStaff({ open, action, data, onClose }) {
   const [formStaff] = Form.useForm();
-
+  const queryClient = useQueryClient();
   useEffect(() => {
     if (action === "edit" && data) {
       formStaff.setFieldsValue({
@@ -36,6 +37,7 @@ function ActionStaff({ open, action, data, onClose }) {
       const res = await axiosInstance.post("/staff", payload);
       if (res.status === 201) {
         toast.success("Tạo nhân viên thành công!");
+        queryClient.invalidateQueries({ queryKey: ["staffs"] });
         onClose();
       }
     } catch (error) {

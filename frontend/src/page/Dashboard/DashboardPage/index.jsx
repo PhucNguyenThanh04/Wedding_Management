@@ -1,47 +1,83 @@
 import { Col, Row } from "antd";
 import KpiCard from "../components/KpiData";
 import RevenueChart from "../components/RevenueChart";
-import RecentlyOrder from "../components/RecentlyOrders";
+import { useQuery } from "@tanstack/react-query";
+import { getOrdersSummary, getRevenue } from "../../../apis/revenue.api";
+import TopMenus from "../components/TopFood";
+import HallsUtilization from "../components/HallsUtilization";
+import StaffPerformance from "../components/StaffPerformance";
 
-const KPI_DATA = [
-  {
-    label: "Doanh thu",
-    icon: "💰",
-    value: "2000000000",
-    change: 18.2,
-    up: true,
-    bars: [28, 35, 32, 45, 42, 38, 50, 48, 55, 52, 60, 72],
-    color: "#4f8ef7",
-  },
-  {
-    label: "Đặt tiệc",
-    icon: "📦",
-    value: "3847",
-    change: 7.4,
-    up: true,
-    bars: [120, 135, 110, 145, 160, 140, 175, 168, 180, 172, 190, 210],
-    color: "#22d3a5",
-  },
-  {
-    label: "Người dùng mới",
-    icon: "👤",
-    value: "1204",
-    change: 3.1,
-    up: false,
-    bars: [80, 90, 75, 95, 88, 82, 78, 85, 70, 74, 68, 65],
-    color: "#f97316",
-  },
-  {
-    label: "Tỷ lệ chuyển đổi",
-    icon: "🎯",
-    value: "5.67%",
-    change: 0.8,
-    up: true,
-    bars: [4.2, 4.5, 4.1, 4.8, 5.0, 4.7, 5.1, 5.3, 5.5, 5.4, 5.6, 5.7],
-    color: "#a855f7",
-  },
-];
 function DashboardPage() {
+  const currentYear = new Date().getFullYear();
+
+  const { data: revenueData } = useQuery({
+    queryKey: ["revenue", "month", currentYear],
+    queryFn: () => getRevenue({ period_type: "month", year: currentYear }),
+  });
+  const revenue = revenueData?.data ?? null;
+
+  const { data: summaryData } = useQuery({
+    queryKey: ["orders-summary"],
+    queryFn: () => getOrdersSummary(),
+  });
+  const summary = summaryData?.data ?? null;
+
+  const grandTotal = Number(revenue?.grand_total ?? 0);
+  const totalOrders = summary?.total_orders ?? 0;
+  const completed = summary?.completed ?? 0;
+
+  const conversionRate =
+    totalOrders > 0 ? ((completed / totalOrders) * 100).toFixed(1) : "0.0";
+
+  const KPI_DATA = [
+    {
+      label: "Doanh thu",
+      icon: "💰",
+      value:
+        grandTotal >= 1_000_000
+          ? (grandTotal / 1_000_000).toFixed(1) + "M"
+          : grandTotal.toLocaleString("vi-VN"),
+      change: 0,
+      up: true,
+      bars: revenue?.items?.map((i) => Number(i.total_revenue)) ?? [],
+      color: "#4f8ef7",
+    },
+    {
+      label: "Tổng đơn",
+      icon: "📦",
+      value: totalOrders.toLocaleString("vi-VN"),
+      change: 0,
+      up: true,
+      bars: [
+        summary?.booking_pending ?? 0,
+        summary?.confirmed ?? 0,
+        summary?.in_progress ?? 0,
+        summary?.completed ?? 0,
+        summary?.cancelled ?? 0,
+        summary?.invoiced ?? 0,
+      ],
+      color: "#22d3a5",
+    },
+    {
+      label: "Hoàn thành",
+      icon: "✅",
+      value: completed.toLocaleString("vi-VN"),
+      change: 0,
+      up: true,
+      bars: [],
+      color: "#f97316",
+    },
+    {
+      label: "Tỷ lệ hoàn thành",
+      icon: "🎯",
+      value: `${conversionRate}%`,
+      change: 0,
+      up: Number(conversionRate) >= 50,
+      bars: [],
+      color: "#a855f7",
+    },
+  ];
+
   return (
     <>
       <Row gutter={16} style={{ marginBottom: 24 }}>
@@ -58,9 +94,18 @@ function DashboardPage() {
         </Col>
       </Row>
 
+      <Row gutter={16} style={{ marginBottom: 24 }}>
+        <Col span={12}>
+          <TopMenus />
+        </Col>
+        <Col span={12}>
+          <HallsUtilization />
+        </Col>
+      </Row>
+
       <Row gutter={16}>
         <Col span={24}>
-          <RecentlyOrder />
+          <StaffPerformance />
         </Col>
       </Row>
     </>

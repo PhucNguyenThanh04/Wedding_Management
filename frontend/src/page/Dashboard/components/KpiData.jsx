@@ -1,5 +1,4 @@
 import { useTheme } from "../../../context/themeContext";
-import MiniSparkBars from "./MiniSparkBars";
 
 function KpiCard({ data, index }) {
   const { t } = useTheme();
@@ -86,8 +85,6 @@ function KpiCard({ data, index }) {
         {data.value}
       </div>
 
-      <MiniSparkBars values={data.bars} color={data.color} />
-
       <div
         style={{
           display: "flex",
@@ -96,21 +93,7 @@ function KpiCard({ data, index }) {
           marginTop: 8,
           fontSize: 12,
         }}
-      >
-        <span
-          style={{
-            fontSize: 11,
-            padding: "2px 6px",
-            borderRadius: 4,
-          }}
-          className={`${data.up ? "text-green-700" : "text-red-700"} ${
-            data.up ? "bg-green-50" : "bg-red-50"
-          }`}
-        >
-          {data.up ? "↑" : "↓"} {data.change}%
-        </span>
-        <span style={{ color: t.textMuted }}>so với tháng trước</span>
-      </div>
+      ></div>
     </div>
   );
 }

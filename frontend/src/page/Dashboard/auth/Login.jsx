@@ -3,8 +3,10 @@ import { Form, Input, Button, Checkbox, message } from "antd";
 import { MailOutlined, LockOutlined } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
 import axiosInstance from "../../../config/axiosInstance";
+import { useAuth } from "../../../hooks/useAuth";
 
 function LoginAdmin() {
+  const { setUser } = useAuth();
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const [form] = Form.useForm();
@@ -22,6 +24,8 @@ function LoginAdmin() {
       });
       if (res.status === 200) {
         localStorage.setItem("access_token", res.data.access_token);
+        const userRes = await axiosInstance.get("/auth/me");
+        setUser(userRes.data);
         navigate("/dashboard");
       }
     } catch (error) {

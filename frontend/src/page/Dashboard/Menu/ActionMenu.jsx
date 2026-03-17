@@ -1,7 +1,6 @@
 import { Modal, Form, Input, InputNumber, Select, Switch } from "antd";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 
-const { Option } = Select;
 const { TextArea } = Input;
 
 const MENU_CATEGORIES = [
@@ -11,7 +10,7 @@ const MENU_CATEGORIES = [
   "anniversary",
   "other",
 ];
-const CATEGORY_LABELS: Record<string, string> = {
+const CATEGORY_LABELS = {
   wedding: "Tiệc cưới",
   birthday: "Sinh nhật",
   corporate: "Hội nghị",
@@ -19,24 +18,11 @@ const CATEGORY_LABELS: Record<string, string> = {
   other: "Khác",
 };
 
-interface ActionMenuProps {
-  open: boolean;
-  editingMenu: any | null;
-  onSave: (values: any) => void;
-  onCancel: () => void;
-  isLoading?: boolean;
-}
-
-function ActionMenu({
-  open,
-  editingMenu,
-  onSave,
-  onCancel,
-  isLoading,
-}: ActionMenuProps) {
+function ActionMenu({ open, editingMenu, onSave, onCancel, isLoading }) {
   const [form] = Form.useForm();
 
   useEffect(() => {
+    if (!open) return;
     if (editingMenu) {
       form.setFieldsValue({
         name: editingMenu.name,
@@ -58,21 +44,16 @@ function ActionMenu({
     });
   };
 
-  const handleCancel = () => {
-    form.resetFields();
-    onCancel();
-  };
-
   return (
     <Modal
-      title={editingMenu ? "Sửa menu" : "Thêm menu mới"}
+      title={editingMenu ? "Sửa combo" : "Thêm combo mới"}
       open={open}
       onOk={handleOk}
-      onCancel={handleCancel}
-      okText={editingMenu ? "Lưu thay đổi" : "Thêm menu"}
+      onCancel={onCancel}
+      okText={editingMenu ? "Lưu thay đổi" : "Thêm combo"}
       cancelText="Huỷ"
       confirmLoading={isLoading}
-      width={560}
+      width={600}
       centered
       destroyOnHidden
     >
@@ -95,12 +76,12 @@ function ActionMenu({
         >
           <Form.Item
             name="name"
-            label="Tên menu"
-            rules={[{ required: true, message: "Vui lòng nhập tên menu!" }]}
+            label="Tên combo"
+            rules={[{ required: true, message: "Vui lòng nhập tên combo!" }]}
           >
             <Input
-              placeholder="VD: Tiệc cưới sang trọng"
-              style={{ height: 45 }}
+              placeholder="VD: Combo tiệc cưới sang trọng"
+              style={{ height: 40 }}
             />
           </Form.Item>
 
@@ -109,11 +90,11 @@ function ActionMenu({
             label="Danh mục"
             rules={[{ required: true, message: "Vui lòng chọn danh mục!" }]}
           >
-            <Select placeholder="Chọn danh mục" style={{ height: 45 }}>
+            <Select placeholder="Chọn danh mục" style={{ height: 40 }}>
               {MENU_CATEGORIES.map((c) => (
-                <Option key={c} value={c}>
+                <Select.Option key={c} value={c}>
                   {CATEGORY_LABELS[c]}
-                </Option>
+                </Select.Option>
               ))}
             </Select>
           </Form.Item>
@@ -133,7 +114,7 @@ function ActionMenu({
           >
             <InputNumber
               min={1}
-              style={{ width: "100%", height: 45 }}
+              style={{ width: "100%", height: 40 }}
               placeholder="50"
             />
           </Form.Item>
@@ -149,8 +130,8 @@ function ActionMenu({
 
         <Form.Item name="description" label="Mô tả">
           <TextArea
-            rows={3}
-            placeholder="Mô tả ngắn về menu..."
+            rows={2}
+            placeholder="Mô tả ngắn về combo..."
             style={{ resize: "none" }}
           />
         </Form.Item>
@@ -158,7 +139,7 @@ function ActionMenu({
         <Form.Item name="image_url" label="URL hình ảnh">
           <Input
             placeholder="https://example.com/image.jpg"
-            style={{ height: 45 }}
+            style={{ height: 40 }}
           />
         </Form.Item>
       </Form>

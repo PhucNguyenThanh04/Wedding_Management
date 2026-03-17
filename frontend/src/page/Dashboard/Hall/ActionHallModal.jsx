@@ -1,271 +1,365 @@
-import {
-  PlusOutlined,
-  EditOutlined,
-  HomeOutlined,
-  CheckCircleOutlined,
-  CloseCircleOutlined,
-  UploadOutlined,
-} from "@ant-design/icons";
-import {
-  Avatar,
-  Button,
-  Col,
-  Divider,
-  Form,
-  Input,
-  InputNumber,
-  Modal,
-  Row,
-  Select,
-  Space,
-  Tag,
-  Upload,
-} from "antd";
-import { useEffect, useState } from "react";
+import { faClose } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+// eslint-disable-next-line no-unused-vars
+import { motion } from "framer-motion";
+import { useTheme } from "../../../context/themeContext";
+import { useEffect } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { createHall, updateHall } from "../../../apis/hall.api";
 import { toast } from "react-toastify";
+import { Form, Input, InputNumber, Switch, Button, Select } from "antd";
+import { PictureOutlined } from "@ant-design/icons";
 
-function ActionHallModal({ open, onClose, action, dataUpdate }) {
-  const isEdit = action === "edit" && dataUpdate;
-  const [hallForm] = Form.useForm();
-  const [imagePreviewUrl, setImagePreviewUrl] = useState(null);
+function ActionHallModal({ onClose, action, dataUpdate }) {
+  const { t } = useTheme();
+  const queryClient = useQueryClient();
+  const [form] = Form.useForm();
 
-  useEffect(() => {
-    if (!open) hallForm.resetFields();
-  }, [open, hallForm]);
-
+  // Populate form khi edit
   useEffect(() => {
     if (action === "edit" && dataUpdate) {
-      console.log("hello");
-
-      hallForm.setFieldsValue({
-        area: dataUpdate.area,
-        capacity: dataUpdate.capacity,
-        floor: dataUpdate.floor,
-        name: dataUpdate.name,
-        description: dataUpdate.description,
-        status: dataUpdate.status,
-        tables: dataUpdate.status,
+      form.setFieldsValue({
+        name: dataUpdate.name ?? "",
+        location: dataUpdate.location ?? "",
+        capacity: dataUpdate.capacity ?? null,
+        min_tables: dataUpdate.min_tables ?? null,
+        max_tables: dataUpdate.max_tables ?? null,
+        price_per_table: dataUpdate.price_per_table ?? null,
+        is_available: dataUpdate.is_available ?? true,
+        description: dataUpdate.description ?? "",
+        image_url: dataUpdate.image_url ?? "",
       });
-
-      if (dataUpdate.image) {
-        // eslint-disable-next-line react-hooks/set-state-in-effect
-        setImagePreviewUrl(dataUpdate.image);
-      }
+    } else {
+      form.resetFields();
+      form.setFieldValue("is_available", true);
     }
-  }, [action, dataUpdate, hallForm]);
+  }, [action, dataUpdate, form]);
 
-  const handleSubmit = async (value) => {
-    console.log(value);
+  const { mutate: create, isPending: isCreating } = useMutation({
+    mutationFn: (payload) => createHall(payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["halls"] });
+      toast.success("Thêm sảnh mới thành công!");
+      onClose();
+    },
+    onError: (err) => {
+      toast.error(err?.response?.data?.message || "Có lỗi xảy ra!");
+    },
+  });
+
+  const { mutate: update, isPending: isUpdating } = useMutation({
+    mutationFn: (payload) => updateHall(dataUpdate.id, payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["halls"] });
+      toast.success("Cập nhật sảnh thành công!");
+      onClose();
+    },
+    onError: (err) => {
+      toast.error(err?.response?.data?.message || "Có lỗi xảy ra!");
+    },
+  });
+
+  const handleSubmit = async () => {
     try {
-      const formData = new FormData();
-      formData.append("area", value.area);
-      formData.append("capacity", value.capacity);
-      formData.append("floor", value.floor);
-      formData.append("name", value.name);
-      formData.append("description", value.description);
-      formData.append("status", value.status);
-      formData.append("tables", value.tables);
-
-      if (value.image?.[0]?.originFileObj) {
-        formData.append("image", value.image[0].originFileObj);
+      const values = await form.validateFields();
+      const payload = {
+        ...values,
+        name: values.name.trim(),
+        location: values.location.trim(),
+        description: values.description?.trim() ?? "",
+        image_url: values.image_url?.trim() ?? "",
+      };
+      if (action === "add") {
+        create(payload);
+      } else {
+        update(payload);
       }
-
-      //   const res = await axiosInstance.post("/api/v1/hall");
-      //   if (res.response.status === 204) {
-      //     toast.success("Tạo sảnh thành công!");
-      //   }
-      toast.success("Tạo sảnh thành công!");
     } catch (error) {
-      console.log(error);
+      toast.error(error.message);
     }
   };
 
-  const normFile = (e) => {
-    if (Array.isArray(e)) return e;
-    return e?.fileList;
-  };
+  const isPending = isCreating || isUpdating;
 
   return (
-    <Modal
-      title={
-        <Space>{isEdit ? "Chỉnh sửa sảnh tiệc" : "Thêm sảnh tiệc mới"}</Space>
-      }
-      open={open}
-      onCancel={onClose}
-      okText={isEdit ? "Cập nhật" : "Thêm sảnh"}
-      cancelText="Hủy"
-      width={560}
-      centered
-      okButtonProps={{
-        icon: isEdit ? <EditOutlined /> : <PlusOutlined />,
-      }}
-      footer={null}
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 w-full z-[999] h-full flex items-center justify-center bg-[#3535356a]"
     >
-      <Divider style={{ margin: "12px 0 20px 0" }} />
-      <div
-        className="max-h-[55rem] overflow-y-auto"
-        style={{ scrollbarWidth: "none" }}
+      <motion.div
+        initial={{ scale: 0.95, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        exit={{ scale: 0.95, opacity: 0 }}
+        transition={{ duration: 0.2 }}
+        className="w-[66rem] h-auto p-10 rounded-md relative"
+        style={{ background: t.surface }}
       >
-        <Form form={hallForm} size="middle" layout="vertical">
-          <Row gutter={10}>
-            <Col span={12}>
+        <button
+          type="button"
+          onClick={onClose}
+          className="absolute top-6 right-6 hover:text-red-500 transition-colors"
+        >
+          <FontAwesomeIcon icon={faClose} className="text-[1.8rem]" />
+        </button>
+
+        <div className="space-y-1 mb-8">
+          <h2 className="text-[2.2rem] font-semibold">
+            {action === "add" ? "Thêm sảnh mới" : "Cập nhật sảnh"}
+          </h2>
+          <p className="text-gray-500 text-[1.4rem]">
+            {action === "add"
+              ? "Điền đầy đủ thông tin để thêm sảnh mới."
+              : "Chỉnh sửa thông tin sảnh."}
+          </p>
+        </div>
+
+        <div className="max-h-[50rem] overflow-auto pr-1">
+          <Form form={form} layout="vertical" requiredMark={false}>
+            <div className="grid grid-cols-2 gap-x-5">
               <Form.Item
+                label={
+                  <span className="text-[1.4rem] font-medium text-gray-700">
+                    Tên sảnh
+                  </span>
+                }
                 name="name"
-                label="Tên sảnh"
                 rules={[{ required: true, message: "Vui lòng nhập tên sảnh" }]}
               >
-                <Input placeholder="VD: Sảnh Hoa Hồng" style={{ height: 40 }} />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item
-                name="floor"
-                label="Tầng / Vị trí"
-                rules={[{ required: true, message: "Vui lòng chọn vị trí!" }]}
-              >
-                <Input placeholder="VD: Tầng 1" style={{ height: 40 }} />
-              </Form.Item>
-            </Col>
-          </Row>
-          <Row gutter={10}>
-            <Col span={12}>
-              <Form.Item
-                name="capacity"
-                label="Sức chứa (khách)"
-                rules={[
-                  { required: true, message: "Vui lòng nhập sức chứa (khách)" },
-                ]}
-              >
-                <InputNumber
-                  min={1}
-                  style={{ width: "100%", height: 40 }}
-                  placeholder="300"
+                <Input
+                  placeholder="VD: Sảnh Kim Cương"
+                  size="large"
+                  className="rounded-md"
                 />
               </Form.Item>
-            </Col>
-            <Col span={12}>
+
               <Form.Item
-                name="tables"
-                label="Số bàn"
-                rules={[{ required: true, message: "Vui lòng chọn số bàn!" }]}
-              >
-                <InputNumber
-                  min={1}
-                  style={{ width: "100%", height: 40 }}
-                  placeholder="30"
-                />
-              </Form.Item>
-            </Col>
-          </Row>
-          <Row gutter={10}>
-            <Col span={12}>
-              <Form.Item name="area" label="Diện tích (m²)">
-                <InputNumber
-                  min={1}
-                  style={{ width: "100%", height: 40 }}
-                  placeholder="500"
-                />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item
-                name="status"
-                label="Trạng thái"
-                rules={[
-                  { required: true, message: "Vui lòng chọn trạng thái!" },
-                ]}
+                label={
+                  <span className="text-[1.4rem] font-medium text-gray-700">
+                    Vị trí
+                  </span>
+                }
+                name="location"
+                rules={[{ required: true, message: "Vui lòng chọn vị trí" }]}
               >
                 <Select
-                  style={{ height: 40 }}
+                  placeholder="Chọn tầng"
+                  size="large"
+                  className="w-full"
                   options={[
-                    {
-                      value: "active",
-                      label: (
-                        <Tag color="green" icon={<CheckCircleOutlined />}>
-                          Hoạt động
-                        </Tag>
-                      ),
-                    },
-                    {
-                      value: "inactive",
-                      label: (
-                        <Tag color="red" icon={<CloseCircleOutlined />}>
-                          Ngừng hoạt động
-                        </Tag>
-                      ),
-                    },
+                    { value: "Tầng 1", label: "Tầng 1" },
+                    { value: "Tầng 2", label: "Tầng 2" },
+                    { value: "Tầng 3", label: "Tầng 3" },
+                    { value: "Tầng 4", label: "Tầng 4" },
+                    { value: "Tầng 5", label: "Tầng 5" },
                   ]}
                 />
               </Form.Item>
-            </Col>
-          </Row>
-          <Form.Item name="description" label="Mô tả">
-            <Input.TextArea rows={2} placeholder="Mô tả thêm về sảnh..." />
-          </Form.Item>
 
-          <Form.Item
-            name={"image"}
-            label="Hình ảnh"
-            valuePropName="fileList"
-            getValueFromEvent={normFile}
-            style={{ cursor: "pointer" }}
-            rules={[{ required: true, message: "Vui lòng chọn hỉnh ảnh!" }]}
-          >
-            <Upload
-              accept="image/*"
-              maxCount={1}
-              beforeUpload={() => false}
-              onChange={(info) => {
-                const file = info.fileList?.[0]?.originFileObj;
-                if (file) {
-                  setImagePreviewUrl(URL.createObjectURL(file));
+              <Form.Item
+                label={
+                  <span className="text-[1.4rem] font-medium text-gray-700">
+                    Sức chứa (người)
+                  </span>
                 }
-              }}
-              style={{ width: "100%" }}
-            >
-              {imagePreviewUrl ? (
-                <img
-                  src={imagePreviewUrl}
-                  style={{ width: "100%", height: "20rem", objectFit: "cover" }}
+                name="capacity"
+                rules={[
+                  { required: true, message: "Vui lòng nhập sức chứa" },
+                  {
+                    type: "number",
+                    min: 1,
+                    message: "Sức chứa phải lớn hơn 0",
+                  },
+                ]}
+              >
+                <InputNumber
+                  placeholder="VD: 200"
+                  min={1}
+                  size="large"
+                  className="w-full rounded-md"
+                  style={{ width: "100%" }}
                 />
-              ) : (
-                <div className="w-full h-[20rem] border border-dashed border-gray-400 rounded-xl flex items-center justify-center">
-                  Chọn hình ảnh
-                </div>
-              )}
-            </Upload>
-          </Form.Item>
+              </Form.Item>
 
-          <div
-            style={{
-              display: "flex",
-              gap: 10,
-              justifyContent: "flex-end",
-              marginTop: 20,
-            }}
+              <Form.Item
+                label={
+                  <span className="text-[1.4rem] font-medium text-gray-700">
+                    Số bàn tối thiểu
+                  </span>
+                }
+                name="min_tables"
+                dependencies={["max_tables"]}
+                rules={[
+                  {
+                    required: true,
+                    message: "Vui lòng nhập số bàn tối thiểu",
+                  },
+                  { type: "number", min: 0, message: "Không được nhỏ hơn 0" },
+                  ({ getFieldValue }) => ({
+                    validator(_, value) {
+                      const max = getFieldValue("max_tables");
+                      if (value == null || max == null || value <= max) {
+                        return Promise.resolve();
+                      }
+                      return Promise.reject(
+                        new Error("Số bàn tối thiểu không được lớn hơn tối đa"),
+                      );
+                    },
+                  }),
+                ]}
+              >
+                <InputNumber
+                  placeholder="VD: 5"
+                  min={0}
+                  size="large"
+                  className="w-full rounded-md"
+                  style={{ width: "100%" }}
+                />
+              </Form.Item>
+
+              <Form.Item
+                label={
+                  <span className="text-[1.4rem] font-medium text-gray-700">
+                    Số bàn tối đa
+                  </span>
+                }
+                name="max_tables"
+                dependencies={["min_tables"]}
+                rules={[
+                  { required: true, message: "Vui lòng nhập số bàn tối đa" },
+                  { type: "number", min: 1, message: "Phải lớn hơn 0" },
+                ]}
+              >
+                <InputNumber
+                  placeholder="VD: 20"
+                  min={1}
+                  size="large"
+                  style={{ width: "100%" }}
+                  className="w-full rounded-md"
+                />
+              </Form.Item>
+
+              <Form.Item
+                label={
+                  <span className="text-[1.4rem] font-medium text-gray-700">
+                    Giá / Bàn (VNĐ)
+                  </span>
+                }
+                name="price_per_table"
+                rules={[
+                  { required: true, message: "Vui lòng nhập giá bàn" },
+                  { type: "number", min: 1, message: "Giá phải lớn hơn 0" },
+                ]}
+              >
+                <InputNumber
+                  placeholder="VD: 500000"
+                  min={1}
+                  size="large"
+                  className="w-full rounded-md"
+                  formatter={(v) =>
+                    `${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+                  }
+                  parser={(v) => v?.replace(/,/g, "")}
+                  style={{ width: "100%" }}
+                />
+              </Form.Item>
+
+              <div className="col-span-2">
+                <Form.Item
+                  label={
+                    <span className="text-[1.4rem] font-medium text-gray-700">
+                      Mô tả
+                    </span>
+                  }
+                  name="description"
+                >
+                  <Input.TextArea
+                    placeholder="Mô tả ngắn về sảnh..."
+                    rows={3}
+                    className="rounded-md resize-none"
+                  />
+                </Form.Item>
+              </div>
+
+              <div className="col-span-2">
+                <Form.Item
+                  label={
+                    <span className="text-[1.4rem] font-medium text-gray-700">
+                      <PictureOutlined className="mr-2" />
+                      URL Hình ảnh
+                    </span>
+                  }
+                  name="image_url"
+                >
+                  <Input
+                    placeholder="https://example.com/image.jpg"
+                    size="large"
+                    className="rounded-md"
+                  />
+                </Form.Item>
+
+                <Form.Item
+                  noStyle
+                  shouldUpdate={(prev, cur) => prev.image_url !== cur.image_url}
+                >
+                  {({ getFieldValue }) => {
+                    const url = getFieldValue("image_url");
+                    return url ? (
+                      <div className="-mt-4 mb-4">
+                        <img
+                          src={url}
+                          alt="Preview"
+                          className="h-24 w-auto rounded-md object-cover border border-gray-200"
+                          onError={(e) => (e.target.style.display = "none")}
+                        />
+                      </div>
+                    ) : null;
+                  }}
+                </Form.Item>
+              </div>
+
+              <div className="col-span-2">
+                <Form.Item
+                  label={
+                    <span className="text-[1.4rem] font-medium text-gray-700">
+                      Trạng thái
+                    </span>
+                  }
+                  name="is_available"
+                  valuePropName="checked"
+                >
+                  <Switch
+                    checkedChildren="Còn trống"
+                    unCheckedChildren="Đang hoạt động"
+                  />
+                </Form.Item>
+              </div>
+            </div>
+          </Form>
+        </div>
+
+        <div className="flex items-center justify-end gap-3 mt-6">
+          <Button
+            onClick={onClose}
+            disabled={isPending}
+            size="large"
+            className="px-8 rounded-md border-gray-300 text-gray-700 hover:!border-gray-400"
           >
-            <Button
-              size="middle"
-              onClick={onClose}
-              style={{ padding: "0 20px" }}
-            >
-              Hủy
-            </Button>
-            <Button
-              type="primary"
-              style={{ padding: "0 20px" }}
-              onClick={() => {
-                hallForm.validateFields().then((value) => {
-                  handleSubmit(value);
-                });
-              }}
-            >
-              {action === "create" ? "Tạo đặt tiệc" : "Lưu thay đổi"}
-            </Button>
-          </div>
-        </Form>
-      </div>
-    </Modal>
+            Hủy
+          </Button>
+          <Button
+            type="primary"
+            onClick={handleSubmit}
+            loading={isPending}
+            size="large"
+            className="px-8 rounded-md bg-blue-500 hover:!bg-blue-600 border-none"
+          >
+            {action === "add" ? "Thêm sảnh" : "Cập nhật"}
+          </Button>
+        </div>
+      </motion.div>
+    </motion.div>
   );
 }
 

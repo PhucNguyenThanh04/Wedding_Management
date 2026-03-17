@@ -3,14 +3,12 @@ import { useTheme } from "../../../context/themeContext";
 import { Avatar, Menu } from "antd";
 import {
   DashboardOutlined,
-  BarChartOutlined,
   UserOutlined,
-  SettingOutlined,
   CalendarOutlined,
   ForkOutlined,
   HomeOutlined,
-  DollarOutlined,
   TeamOutlined,
+  ShopOutlined,
 } from "@ant-design/icons";
 
 const NAV_ITEMS = [
@@ -18,16 +16,15 @@ const NAV_ITEMS = [
 
   { type: "divider" },
 
-  { key: "schedule", icon: <CalendarOutlined />, label: "Lịch tiệc" },
+  { key: "booking", icon: <CalendarOutlined />, label: "Đặc sảnh" },
   { key: "halls", icon: <HomeOutlined />, label: "Sảnh" },
 
   { type: "divider" },
 
   { key: "menu", icon: <ForkOutlined />, label: "Thực đơn" },
+  { key: "dishes", icon: <ShopOutlined />, label: "Món ăn" },
   { key: "customers", icon: <UserOutlined />, label: "Khách hàng" },
-  { key: "staffs", icon: <TeamOutlined />, label: "Nhân sự" },
-
-  // { type: "divider" },
+  { key: "staffs", icon: <TeamOutlined />, label: "Nhân viên" },
 
   // { key: "finance", icon: <DollarOutlined />, label: "Thu chi & Công nợ" },
   // { key: "reports", icon: <BarChartOutlined />, label: "Báo cáo" },
