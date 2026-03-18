@@ -21,10 +21,10 @@ axiosInstance.interceptors.request.use((config) => {
 axiosInstance.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
-      localStorage.removeItem("access_token");
-      window.location.href = "/dashboard/login";
-    }
+    // if (error.response?.status === 401) {
+    //   localStorage.removeItem("access_token");
+    //   window.location.href = "/dashboard/login";
+    // }
 
     return Promise.reject(error);
   },

@@ -25,3 +25,11 @@ export const completedOrder = (id) =>
 export const getBookingById = async (id) => {
   return await axiosInstance.get(`/orders/${id}`);
 };
+
+export const updateBookingMenu = async (id, data) => {
+  return await axiosInstance.put(`/menus/${id}`, data);
+};
+
+export const updateBookingItems = async (id, data) => {
+  return await axiosInstance.put(`/menus/${id}`, data);
+};

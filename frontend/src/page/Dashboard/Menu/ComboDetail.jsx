@@ -4,21 +4,17 @@ import {
   Card,
   Empty,
   Image,
-  Popconfirm,
   Skeleton,
   Space,
   Tag,
-  Tooltip,
   Typography,
 } from "antd";
 import {
   ArrowLeftOutlined,
   CalendarOutlined,
-  DeleteOutlined,
   EditOutlined,
   PlusOutlined,
   TeamOutlined,
-  UserOutlined,
 } from "@ant-design/icons";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate, useParams } from "react-router";
@@ -84,6 +80,7 @@ function MenuDetailPage() {
 
   const themeCtx = (() => {
     try {
+      // eslint-disable-next-line react-hooks/rules-of-hooks
       return useTheme();
     } catch {
       return null;
@@ -343,7 +340,7 @@ function MenuDetailPage() {
               <Button
                 type="primary"
                 icon={<PlusOutlined />}
-                size="small"
+                size="middle"
                 onClick={() => setDishModalOpen(true)}
                 style={{ borderRadius: 6 }}
               >

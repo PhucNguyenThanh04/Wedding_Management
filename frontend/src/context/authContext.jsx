@@ -18,6 +18,17 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const logout = async () => {
+    try {
+      await axiosInstance.post("/auth/logout");
+    } catch {
+      //
+    } finally {
+      localStorage.removeItem("access_token");
+      setUser(null);
+    }
+  };
+
   useEffect(() => {
     const token = localStorage.getItem("access_token");
 
@@ -31,7 +42,7 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, setUser, isLoading }}>
+    <AuthContext.Provider value={{ user, setUser, isLoading, logout }}>
       {children}
     </AuthContext.Provider>
   );

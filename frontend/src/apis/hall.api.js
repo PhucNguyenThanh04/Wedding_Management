@@ -30,7 +30,7 @@ export const toggleHallAvailability = async (hallId) => {
   return res;
 };
 
-export const getAvailableHalls = async () => {
-  const res = await axiosInstance.get("/hallavailability");
+export const getAvailableHalls = async (params) => {
+  const res = await axiosInstance.get("/hallavailability", { params });
   return res;
 };

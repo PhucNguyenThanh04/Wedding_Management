@@ -1,25 +1,64 @@
 import { useState } from "react";
-import { Form, Input, Button, message, Checkbox } from "antd";
-import { MailOutlined, LockOutlined } from "@ant-design/icons";
+import { Form, Input, Button, Checkbox } from "antd";
+import {
+  MailOutlined,
+  LockOutlined,
+  UserOutlined,
+  PhoneOutlined,
+  HomeOutlined,
+  FileTextOutlined,
+} from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
+import axiosInstance from "../../../../config/axiosInstance";
 
 function LoginAndRegister() {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const [form] = Form.useForm();
-  const [isLogin, setIsLogin] = useState(false);
+  const [isLogin, setIsLogin] = useState(true);
 
   const handleSubmit = async (values) => {
     setLoading(true);
-    await new Promise((r) => setTimeout(r, 1000));
-    setLoading(false);
-    if (values.email === "user@gmail.com" && values.password === "123456") {
-      localStorage.setItem("user", JSON.stringify({ email: values.email }));
-      navigate("/");
-      message.success("Đăng nhập thành công!");
-    } else {
-      message.error("Email hoặc mật khẩu không đúng.");
+    try {
+      let res;
+      if (isLogin) {
+        res = await axiosInstance.post("/auth/login", {
+          email: values.email,
+          password: values.password,
+        });
+      } else {
+        res = await axiosInstance.post("/customer", {
+          full_name: values.full_name,
+          phone: values.phone,
+          email: values.email,
+          address: values.address ?? "",
+          note: values.note ?? "",
+        });
+      }
+
+      if (res.status) {
+        toast.success(
+          isLogin ? "Đăng nhập thành công!" : "Đăng ký thành công!",
+        );
+        if (isLogin) {
+          navigate("/");
+        } else {
+          form.resetFields();
+          setIsLogin(true);
+        }
+      }
+    } catch (error) {
+      console.log(error);
+      toast.error(error?.response?.data?.message || error.message);
+    } finally {
+      setLoading(false);
     }
+  };
+
+  const switchMode = () => {
+    form.resetFields();
+    setIsLogin((prev) => !prev);
   };
 
   return (
@@ -56,36 +95,44 @@ function LoginAndRegister() {
           color: #2c1f14 !important;
           background: transparent !important;
         }
-        .lf .ant-input::placeholder {
-          color: #c4b5a5 !important;
-          font-size: 1.4rem !important;
-        }
-        .lf .ant-input-prefix {
-          color: #c4a882 !important;
-          font-size: 1.4rem !important;
-          margin-right: 10px !important;
-        }
+        .lf .ant-input::placeholder { color: #c4b5a5 !important; font-size: 1.4rem !important; }
+        .lf .ant-input-prefix { color: #c4a882 !important; font-size: 1.4rem !important; margin-right: 10px !important; }
         .lf .ant-input-password-icon svg { color: #c4a882 !important; }
         .lf .ant-input-password-icon:hover svg { color: #b8855a !important; }
+
+        /* Textarea (note) */
+        .lf .ant-input:not(.ant-input-affix-wrapper .ant-input) {
+          background: #faf7f4 !important;
+          border: 1.5px solid #e0d4c8 !important;
+          border-radius: 8px !important;
+          padding: 10px 14px !important;
+          box-shadow: none !important;
+          font-family: 'Outfit', sans-serif !important;
+          font-size: 1.4rem !important;
+          color: #2c1f14 !important;
+          resize: none !important;
+        }
+        .lf textarea.ant-input:hover { border-color: #b8855a !important; }
+        .lf textarea.ant-input:focus {
+          border-color: #b8855a !important;
+          box-shadow: 0 0 0 3px rgba(184,133,90,0.12) !important;
+        }
+
         .lf .ant-checkbox-wrapper {
           font-family: 'Outfit', sans-serif !important;
           font-size: 1.4rem !important;
           color: #8a6e56 !important;
         }
         .lf .ant-checkbox-inner {
-          width: 18px !important;
-          height: 18px !important;
-          border-radius: 4px !important;
-          border-color: #d0bfb0 !important;
+          width: 18px !important; height: 18px !important;
+          border-radius: 4px !important; border-color: #d0bfb0 !important;
         }
         .lf .ant-checkbox-checked .ant-checkbox-inner {
-          background: #b8855a !important;
-          border-color: #b8855a !important;
+          background: #b8855a !important; border-color: #b8855a !important;
         }
         .lf .ant-form-item-explain-error {
           font-family: 'Outfit', sans-serif !important;
-          font-size: 1.15rem !important;
-          color: #c0674a !important;
+          font-size: 1.15rem !important; color: #c0674a !important;
         }
       `}</style>
 
@@ -102,10 +149,13 @@ function LoginAndRegister() {
           fontFamily: "'Outfit', sans-serif",
         }}
       >
+        {/* Dev hint */}
         <div className="absolute top-0 right-0 w-auto h-auto p-5 bg-white">
           <p>email: user@gmail.com</p>
           <p>pass: 123456</p>
         </div>
+
+        {/* Decorative blobs */}
         <div
           style={{
             position: "absolute",
@@ -141,10 +191,12 @@ function LoginAndRegister() {
             borderRadius: 12,
             padding: "48px 44px 40px",
             width: "100%",
-            maxWidth: 440,
+            maxWidth: isLogin ? 440 : 520,
             boxShadow: "0 24px 80px rgba(0,0,0,0.45)",
+            transition: "max-width 0.3s",
           }}
         >
+          {/* Title */}
           <div style={{ textAlign: "center", marginBottom: 28 }}>
             <h2
               style={{
@@ -187,6 +239,57 @@ function LoginAndRegister() {
             requiredMark={false}
             className="lf"
           >
+            {/* ── ĐĂNG KÝ fields ── */}
+            {!isLogin && (
+              <>
+                <div className="grid grid-cols-2 gap-x-4">
+                  <Form.Item
+                    name="full_name"
+                    label="Họ và tên"
+                    rules={[
+                      { required: true, message: "Vui lòng nhập họ tên" },
+                    ]}
+                  >
+                    <Input
+                      prefix={<UserOutlined />}
+                      placeholder="Nguyễn Văn A"
+                      size="large"
+                    />
+                  </Form.Item>
+
+                  <Form.Item
+                    name="phone"
+                    label="Số điện thoại"
+                    rules={[
+                      {
+                        required: true,
+                        message: "Vui lòng nhập số điện thoại",
+                      },
+                      {
+                        pattern: /^[0-9]{9,11}$/,
+                        message: "Số điện thoại không hợp lệ",
+                      },
+                    ]}
+                  >
+                    <Input
+                      prefix={<PhoneOutlined />}
+                      placeholder="0901234567"
+                      size="large"
+                    />
+                  </Form.Item>
+                </div>
+
+                <Form.Item name="address" label="Địa chỉ">
+                  <Input
+                    prefix={<HomeOutlined />}
+                    placeholder="123 Đường ABC, Quận 1, TP.HCM"
+                    size="large"
+                  />
+                </Form.Item>
+              </>
+            )}
+
+            {/* Email — dùng cho cả 2 mode */}
             <Form.Item
               name="email"
               label="Email"
@@ -203,19 +306,34 @@ function LoginAndRegister() {
               />
             </Form.Item>
 
-            <Form.Item
-              name="password"
-              label="Mật khẩu"
-              rules={[{ required: true, message: "Vui lòng nhập mật khẩu" }]}
-            >
-              <Input.Password
-                prefix={<LockOutlined />}
-                placeholder="Nhập mật khẩu"
-                size="large"
-                autoComplete="current-password"
-              />
-            </Form.Item>
+            {/* Password — chỉ khi đăng nhập */}
+            {isLogin && (
+              <Form.Item
+                name="password"
+                label="Mật khẩu"
+                rules={[{ required: true, message: "Vui lòng nhập mật khẩu" }]}
+              >
+                <Input.Password
+                  prefix={<LockOutlined />}
+                  placeholder="Nhập mật khẩu"
+                  size="large"
+                  autoComplete="current-password"
+                />
+              </Form.Item>
+            )}
 
+            {/* Note — chỉ khi đăng ký */}
+            {!isLogin && (
+              <Form.Item name="note" label="Ghi chú">
+                <Input.TextArea
+                  placeholder="Ghi chú thêm (không bắt buộc)..."
+                  rows={2}
+                  prefix={<FileTextOutlined />}
+                />
+              </Form.Item>
+            )}
+
+            {/* Terms — chỉ khi đăng ký */}
             {!isLogin && (
               <Form.Item
                 name="terms"
@@ -244,12 +362,12 @@ function LoginAndRegister() {
               </Form.Item>
             )}
 
+            {/* Quên mật khẩu — chỉ khi đăng nhập */}
             {isLogin && (
               <div
                 style={{
                   display: "flex",
                   justifyContent: "end",
-                  alignItems: "center",
                   marginBottom: 24,
                 }}
               >
@@ -287,7 +405,7 @@ function LoginAndRegister() {
                   boxShadow: "0 2px 14px rgba(44,31,20,0.25)",
                 }}
               >
-                {isLogin ? "Đăng nhập" : "Đăng ký"}
+                {isLogin ? "Đăng nhập" : "Tạo tài khoản"}
               </Button>
             </Form.Item>
           </Form>
@@ -302,7 +420,7 @@ function LoginAndRegister() {
             }}
           >
             <span>
-              {isLogin ? "Chưa có tài khoản?" : "Bạn đã có tài khoản?"}{" "}
+              {isLogin ? "Chưa có tài khoản?" : "Bạn đã có tài khoản?"}
             </span>
             <div
               style={{
@@ -311,11 +429,9 @@ function LoginAndRegister() {
                 fontWeight: 500,
               }}
               className="cursor-pointer"
-              onClick={() => {
-                setIsLogin((prev) => !prev);
-              }}
+              onClick={switchMode}
             >
-              {!isLogin ? "Đăng nhập ngay" : "Đăng ký ngay"}
+              {isLogin ? "Đăng ký ngay" : "Đăng nhập ngay"}
             </div>
           </div>
         </div>

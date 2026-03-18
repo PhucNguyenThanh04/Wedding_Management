@@ -58,14 +58,10 @@ const toggleMenuActive = async (id) => {
   return res.data;
 };
 
-const getDishes = async () => {
-  const res = await axiosInstance.get("/dishes");
-  return res.data;
-};
-
 function Menu() {
   const themeCtx = (() => {
     try {
+      // eslint-disable-next-line react-hooks/rules-of-hooks
       return useTheme();
     } catch {
       return null;
@@ -78,17 +74,10 @@ function Menu() {
   const [search, setSearch] = useState("");
   const [menuModalOpen, setMenuModalOpen] = useState(false);
   const [editingMenu, setEditingMenu] = useState(null);
-  const [dishModalOpen, setDishModalOpen] = useState(false);
-  const [selectedMenu, setSelectedMenu] = useState(null);
 
   const { data: menus = [], isLoading } = useQuery({
     queryKey: ["menus"],
     queryFn: getMenus,
-  });
-
-  const { data: dishes = [] } = useQuery({
-    queryKey: ["dishes"],
-    queryFn: getDishes,
   });
 
   const createMenuMutation = useMutation({
@@ -125,22 +114,6 @@ function Menu() {
   const toggleActiveMutation = useMutation({
     mutationFn: toggleMenuActive,
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["menus"] }),
-    onError: (e) => toast.error(e.response?.data?.detail || "Lỗi server!"),
-  });
-
-  const addDishesToMenuMutation = useMutation({
-    mutationFn: async ({ menuId, dishes }) => {
-      const res = await axiosInstance.post(`/menus/${menuId}/dishes`, {
-        dish_ids: dishes.map((d) => d.id),
-      });
-      return res.data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["menus"] });
-      toast.success("Cập nhật món ăn thành công!");
-      setDishModalOpen(false);
-      setSelectedMenu(null);
-    },
     onError: (e) => toast.error(e.response?.data?.detail || "Lỗi server!"),
   });
 
@@ -278,18 +251,6 @@ function Menu() {
             />
           </Tooltip>
         </Popconfirm>
-
-        <Tooltip title="Quản lý món ăn">
-          <Button
-            size="small"
-            icon={<PlusOutlined />}
-            block
-            onClick={() => {
-              setSelectedMenu(item);
-              setDishModalOpen(true);
-            }}
-          />
-        </Tooltip>
       </div>
     </Card>
   );
@@ -430,28 +391,6 @@ function Menu() {
           setEditingMenu(null);
         }}
         isLoading={createMenuMutation.isPending || updateMenuMutation.isPending}
-      />
-
-      <DishSelectorModal
-        open={dishModalOpen}
-        dishes={dishes}
-        value={
-          selectedMenu?.dishes?.map((d) => ({
-            id: d.id,
-            quantity: d.quantity ?? 1,
-          })) ?? []
-        }
-        onChange={(selected) => {
-          addDishesToMenuMutation.mutate({
-            menuId: selectedMenu.id,
-            dishes: selected,
-          });
-        }}
-        onCancel={() => {
-          setDishModalOpen(false);
-          setSelectedMenu(null);
-        }}
-        isLoading={addDishesToMenuMutation.isPending}
       />
     </div>
   );

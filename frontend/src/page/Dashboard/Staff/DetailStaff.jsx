@@ -18,6 +18,7 @@ import { useState } from "react";
 import ActionStaff from "./ActionStaff";
 import { useQuery } from "@tanstack/react-query";
 import { getStaffById } from "../../../apis/staff.api";
+import staff_male from "../../../assets/images/staff_male.png";
 
 const { Text, Title } = Typography;
 
@@ -194,7 +195,7 @@ function DetailStaff() {
         <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
           <div style={{ ...cardStyle, textAlign: "center" }}>
             <img
-              src={staff.image ?? "https://i.pravatar.cc/150?img=1"}
+              src={staff_male ?? "https://i.pravatar.cc/150?img=1"}
               alt={staff.full_name}
               style={{
                 width: 88,

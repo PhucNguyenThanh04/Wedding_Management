@@ -22,6 +22,7 @@ import Hall from "./page/Dashboard/Hall";
 import Booking from "./page/Dashboard/booking";
 import BookingDetail from "./page/Dashboard/booking/BookingDetail";
 import MenuDetailPage from "./page/Dashboard/Menu/ComboDetail";
+import BookingPage from "./page/customers/booking";
 
 function App() {
   return (
@@ -29,6 +30,7 @@ function App() {
       <Route path="/" element={<CustomerPage />}>
         <Route index element={<HomePage />} />
       </Route>
+      <Route path="/booking" element={<BookingPage />} />
       <Route path="/about" element={<AboutPage />} />
       <Route path="/halls" element={<HallPage />} />
       <Route path="/menu" element={<MenuPage />} />

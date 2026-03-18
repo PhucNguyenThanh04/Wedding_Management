@@ -1,7 +1,9 @@
 import { Button } from "antd";
 import { ArrowDownOutlined } from "@ant-design/icons";
+import { useNavigate } from "react-router-dom";
 
 function Banner() {
+  const navigate = useNavigate();
   return (
     <section
       className="relative flex items-center overflow-hidden"
@@ -41,7 +43,6 @@ function Banner() {
           <div className="flex flex-wrap gap-4 fade-4">
             <Button
               size="large"
-              href="#contact"
               style={{
                 background: "#d97706",
                 border: "none",
@@ -52,6 +53,7 @@ function Banner() {
                 fontWeight: 600,
                 fontSize: 15,
               }}
+              onClick={() => navigate("/booking")}
             >
               Đặt tiệc ngay
             </Button>
