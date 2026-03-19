@@ -1,3 +1,4 @@
+import random
 import re
 from typing import Tuple
 from sqlalchemy.orm import Session
@@ -99,7 +100,7 @@ async def request_password_reset(db: Session, email: str):
         if not user:
             raise HTTPException(status_code=404, detail="User with this email not found")
 
-        reset_token = str(uuid.uuid4())  # Generate a unique token
+        reset_token = str(random.randint(99999, 999999))
         user.reset_token = reset_token
         db.add(user)
         db.commit()
