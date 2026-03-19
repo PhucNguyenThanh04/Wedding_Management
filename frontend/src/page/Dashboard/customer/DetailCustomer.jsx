@@ -17,6 +17,7 @@ import { useState } from "react";
 import ActionCustomer from "./ActionCustomer";
 import { useQuery } from "@tanstack/react-query";
 import { getCustomerById, getCustomerOrders } from "../../../apis/customer.api";
+import staff_male from "../../../assets/images/staff_male.png";
 
 const { Text, Title } = Typography;
 
@@ -61,7 +62,6 @@ function DetailCustomer() {
     padding: "20px 24px",
   };
 
-  // Loading state
   if (isLoadingCustomer) {
     return (
       <div
@@ -118,7 +118,6 @@ function DetailCustomer() {
     );
   }
 
-  // Error state
   if (isError || !customer) {
     return (
       <div
@@ -145,6 +144,19 @@ function DetailCustomer() {
 
   const rank = rankConfig(customer.total_spent ?? 0);
   const status = statusConfig[customer.status] ?? statusConfig.active;
+  const total_spent =
+    orders.length > 0 &&
+    customer &&
+    orders.reduce((acc, cur) => {
+      return Number(acc) + Number(cur.total_amount);
+    }, 0);
+
+  const formatPrice = (price) => {
+    return Intl.NumberFormat("vi-VN", {
+      style: "currency",
+      currency: "VND",
+    }).format(price);
+  };
 
   return (
     <div
@@ -210,7 +222,7 @@ function DetailCustomer() {
         <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
           <div style={{ ...cardStyle, textAlign: "center" }}>
             <img
-              src={customer.image ?? "https://i.pravatar.cc/150?img=1"}
+              src={staff_male ?? "https://i.pravatar.cc/150?img=1"}
               alt={customer.full_name}
               style={{
                 width: 90,
@@ -343,9 +355,7 @@ function DetailCustomer() {
                   <RiseOutlined style={{ fontSize: 22, color: "#6366f1" }} />
                 ),
                 title: "Tổng chi tiêu",
-                value: customer.total_spent
-                  ? customer.total_spent.toLocaleString("vi-VN") + "đ"
-                  : "—",
+                value: formatPrice(total_spent),
                 bg: "#ede9fe",
               },
               {
@@ -448,64 +458,64 @@ function DetailCustomer() {
                   </tr>
                 </thead>
                 <tbody>
-                  {orders.map((order) => (
-                    <tr
-                      key={order.id}
-                      style={{
-                        borderBottom: `1px solid ${t.border ?? "#e2e8f0"}`,
-                        color: t.text ?? "#1e293b",
-                      }}
-                    >
-                      <td className="p-2">
-                        <Text strong style={{ color: "#6366f1" }}>
-                          #{order.id?.slice(0, 8).toUpperCase()}
-                        </Text>
-                      </td>
-                      <td className="p-2" style={{ color: "#64748b" }}>
-                        {order.created_at
-                          ? new Date(order.created_at).toLocaleDateString(
-                              "vi-VN",
-                            )
-                          : "—"}
-                      </td>
-                      <td className="p-2" style={{ maxWidth: 180 }}>
-                        <Text
-                          ellipsis={{ tooltip: order.items }}
-                          style={{
-                            color: t.text ?? "#1e293b",
-                            display: "block",
-                            maxWidth: 180,
-                          }}
-                        >
-                          {order.items ?? "—"}
-                        </Text>
-                      </td>
-                      <td className="p-2">
-                        <Text strong style={{ color: "#16a34a" }}>
-                          {order.total_amount
-                            ? order.total_amount.toLocaleString("vi-VN") + "đ"
+                  {orders.map((order) => {
+                    return (
+                      <tr
+                        key={order.id}
+                        style={{
+                          borderBottom: `1px solid ${t.border ?? "#e2e8f0"}`,
+                          color: t.text ?? "#1e293b",
+                        }}
+                      >
+                        <td className="p-2">
+                          <Text strong style={{ color: "#6366f1" }}>
+                            #{order.id}
+                          </Text>
+                        </td>
+                        <td className="p-2" style={{ color: "#64748b" }}>
+                          {order.created_at
+                            ? new Date(order.created_at).toLocaleDateString(
+                                "vi-VN",
+                              )
                             : "—"}
-                        </Text>
-                      </td>
-                      <td className="p-2">
-                        <Tag
-                          color={
-                            order.status === "completed"
-                              ? "green"
+                        </td>
+                        <td className="p-2" style={{ maxWidth: 180 }}>
+                          <Text
+                            ellipsis={{ tooltip: order.items }}
+                            style={{
+                              color: t.text ?? "#1e293b",
+                              display: "block",
+                              maxWidth: 180,
+                            }}
+                          >
+                            {order.items ?? "—"}
+                          </Text>
+                        </td>
+                        <td className="p-2">
+                          <Text strong style={{ color: "#16a34a" }}>
+                            {formatPrice(order.total_amount)}
+                          </Text>
+                        </td>
+                        <td className="p-2">
+                          <Tag
+                            color={
+                              order.status === "completed"
+                                ? "green"
+                                : order.status === "pending"
+                                  ? "orange"
+                                  : "red"
+                            }
+                          >
+                            {order.status === "completed"
+                              ? "Hoàn thành"
                               : order.status === "pending"
-                                ? "orange"
-                                : "red"
-                          }
-                        >
-                          {order.status === "completed"
-                            ? "Hoàn thành"
-                            : order.status === "pending"
-                              ? "Đang xử lý"
-                              : "Đã huỷ"}
-                        </Tag>
-                      </td>
-                    </tr>
-                  ))}
+                                ? "Đang xử lý"
+                                : "Đã huỷ"}
+                          </Tag>
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             )}

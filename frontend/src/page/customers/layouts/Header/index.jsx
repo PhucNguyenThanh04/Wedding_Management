@@ -25,7 +25,7 @@ const NAV_LINKS = [
 function Header({ isBg }) {
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const elementRef = useRef(null);
   const [showPersonalModal, setShowPersonalModal] = useState(false);
   const navigate = useNavigate();
@@ -54,7 +54,8 @@ function Header({ isBg }) {
     };
   });
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    await logout();
     localStorage.removeItem("user");
     navigate("/");
   };

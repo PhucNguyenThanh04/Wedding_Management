@@ -48,11 +48,19 @@ function Staff() {
     action: "add",
     data: null,
   });
+  const [openDelete, setOpenDelete] = useState(null);
 
   const { data: staffs = [], isLoading } = useQuery({
     queryKey: ["staffs"],
     queryFn: getAllStaff,
   });
+
+  const handleDeleteStaff = () => {
+    // gọi API delete ở đây
+    console.log("Delete staff...");
+
+    setOpenDelete(false);
+  };
 
   const filteredStaffs = staffs.filter((staff) => {
     const matchSearch =
@@ -147,6 +155,7 @@ function Staff() {
             <th className="p-2 text-start">Họ tên</th>
             <th className="p-2 text-start">Email</th>
             <th className="p-2 text-start">Số điện thoại</th>
+            <th className="p-2 text-start">Trạng thái</th>
             <th className="p-2 text-start">Vị trí</th>
             <th className="p-2 text-center">Hành động</th>
           </tr>
@@ -170,10 +179,22 @@ function Staff() {
                 <td className="p-2">{staff.full_name}</td>
                 <td className="p-2">{staff.email}</td>
                 <td className="p-2">{staff.phone}</td>
+                <td className="p-2">
+                  <span
+                    className={`${staff.is_active ? "text-green-600 px-6 py-1 bg-green-50" : "text-red-600 px-6 py-1 bg-red-50"} rounded-full`}
+                  >
+                    {staff.is_active ? "Đang làm" : "Đã nghỉ"}
+                  </span>
+                </td>
                 <td className="p-2">Nhân viên</td>
                 <td
                   className="p-2"
-                  style={{ display: "flex", justifyContent: "center", gap: 10 }}
+                  style={{
+                    display: "flex",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    gap: 10,
+                  }}
                 >
                   <Link
                     to={`detail/${staff.id}`}
@@ -181,7 +202,7 @@ function Staff() {
                       color: "#fff",
                       background: "#4caf50",
                       textDecoration: "none",
-                      display: "inline-block",
+                      display: "block",
                       textAlign: "center",
                       transition: "background .3s",
                       fontSize: 14,
@@ -207,6 +228,19 @@ function Staff() {
                   >
                     Sửa
                   </button>
+                  <button
+                    style={{
+                      padding: "6px 12px",
+                      color: "#fff",
+                      border: "none",
+                      borderRadius: 4,
+                      cursor: "pointer",
+                    }}
+                    className="bg-red-500 hover:bg-red-600 transition"
+                    onClick={() => setOpenDelete(staff.id)}
+                  >
+                    Xóa
+                  </button>
                 </td>
               </tr>
             ))
@@ -220,6 +254,37 @@ function Staff() {
         data={openAction.data}
         onClose={() => setOpenAction({ open: false, action: "", data: null })}
       />
+
+      {openDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="bg-white rounded-xl shadow-lg w-[400px] p-6 animate-fadeIn">
+            <h2 className="text-lg font-semibold text-gray-800 mb-2">
+              Xác nhận xoá
+            </h2>
+
+            <p className="text-gray-600 mb-6">
+              Bạn có chắc chắn muốn xoá nhân viên này không? Hành động này không
+              thể hoàn tác.
+            </p>
+
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => setOpenDelete(false)}
+                className="px-4 py-2 rounded-md border border-gray-300 hover:bg-gray-100 transition"
+              >
+                Huỷ
+              </button>
+
+              <button
+                onClick={() => handleDeleteStaff()}
+                className="px-4 py-2 rounded-md bg-red-500 text-white hover:bg-red-600 transition"
+              >
+                Xoá
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

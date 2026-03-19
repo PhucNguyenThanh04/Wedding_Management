@@ -8,27 +8,41 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  const fetchUser = async () => {
+    try {
+      const res = await axiosInstance.get("/auth/me");
+      setUser(res.data);
+      // eslint-disable-next-line no-unused-vars
+    } catch (error) {
+      setUser(null);
+    }
+  };
+
+  const logout = async () => {
+    try {
+      await axiosInstance.post("/auth/logout");
+    } catch {
+      //
+    } finally {
+      localStorage.removeItem("access_token");
+      setUser(null);
+    }
+  };
+
   useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const res = await axiosInstance.get("/auth/me");
-        if (res.status === 200) {
-          setUser(res.data);
-        }
-      } catch (error) {
-        console.log(error);
+    const token = localStorage.getItem("access_token");
 
-        setUser(null);
-      } finally {
-        setIsLoading(false);
-      }
-    };
+    if (!token) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setIsLoading(false);
+      return;
+    }
 
-    fetchUser();
+    fetchUser().finally(() => setIsLoading(false));
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, isLoading }}>
+    <AuthContext.Provider value={{ user, setUser, isLoading, logout }}>
       {children}
     </AuthContext.Provider>
   );

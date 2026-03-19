@@ -8,20 +8,24 @@ const axiosInstance = axios.create({
   },
 });
 
-axiosInstance.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem("access_token");
+axiosInstance.interceptors.request.use((config) => {
+  const token = localStorage.getItem("access_token");
 
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
 
-    return config;
-  },
+  return config;
+});
+
+axiosInstance.interceptors.response.use(
+  (response) => response,
   (error) => {
-    if (error.response.status === 401) {
-      localStorage.removeItem("access_token");
-    }
+    // if (error.response?.status === 401) {
+    //   localStorage.removeItem("access_token");
+    //   window.location.href = "/dashboard/login";
+    // }
+
     return Promise.reject(error);
   },
 );

@@ -1,12 +1,7 @@
 import Dashboard from "./page/Dashboard";
-import { Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route } from "react-router-dom";
 import DashboardPage from "./page/Dashboard/DashboardPage";
-import DetailOrder from "./page/Dashboard/PartySchedule/DetailOrder";
-import ContractPage from "./page/Dashboard/ContractPage";
-import PartySchedule from "./page/Dashboard/PartySchedule";
-import HallAndShift from "./page/Dashboard/Hall";
 import Menu from "./page/Dashboard/Menu";
-import ActionModal from "./page/Dashboard/PartySchedule/ActionModal";
 import Customer from "./page/Dashboard/customer";
 import Staff from "./page/Dashboard/Staff";
 import DetailCustomer from "./page/Dashboard/customer/DetailCustomer";
@@ -22,6 +17,12 @@ import LoginAndRegister from "./page/customers/auth/loginandregister";
 import OrderPage from "./page/customers/history";
 import PrivateRoute from "./components/privateRoute";
 import PrivateRouteAdmin from "./components/privateRouteAdmin";
+import Dish from "./page/Dashboard/dish";
+import Hall from "./page/Dashboard/Hall";
+import Booking from "./page/Dashboard/booking";
+import BookingDetail from "./page/Dashboard/booking/BookingDetail";
+import MenuDetailPage from "./page/Dashboard/Menu/ComboDetail";
+import BookingPage from "./page/customers/booking";
 
 function App() {
   return (
@@ -29,6 +30,7 @@ function App() {
       <Route path="/" element={<CustomerPage />}>
         <Route index element={<HomePage />} />
       </Route>
+      <Route path="/booking" element={<BookingPage />} />
       <Route path="/about" element={<AboutPage />} />
       <Route path="/halls" element={<HallPage />} />
       <Route path="/menu" element={<MenuPage />} />
@@ -48,12 +50,12 @@ function App() {
         }
       >
         <Route index element={<DashboardPage />} replace />
-        <Route path="schedule" element={<PartySchedule />} />
-        <Route path="schedule/booking" element={<ActionModal />} />
-        <Route path="schedule/detail/:id" element={<DetailOrder />} />
-        <Route path="contract/:id" element={<ContractPage />} />
-        <Route path="halls" element={<HallAndShift />} />
+        <Route path="booking" element={<Booking />} />
+        <Route path="booking-detail/:id" element={<BookingDetail />} />
+        <Route path="halls" element={<Hall />} />
         <Route path="menu" element={<Menu />} />
+        <Route path="menu/:id" element={<MenuDetailPage />} />
+        <Route path="dishes" element={<Dish />} />
         <Route path="customers" element={<Customer />} />
         <Route path="customers/detail/:id" element={<DetailCustomer />} />
         <Route

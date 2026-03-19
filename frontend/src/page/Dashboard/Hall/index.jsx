@@ -1,412 +1,243 @@
-import { useState } from "react";
-import {
-  Table,
-  Tag,
-  Button,
-  Input,
-  Select,
-  Card,
-  Statistic,
-  Tooltip,
-  Space,
-  Row,
-  Col,
-  Typography,
-  Badge,
-  Empty,
-} from "antd";
-import {
-  PlusOutlined,
-  EditOutlined,
-  DeleteOutlined,
-  SearchOutlined,
-  HomeOutlined,
-  CheckCircleOutlined,
-  CloseCircleOutlined,
-  TeamOutlined,
-  EyeOutlined,
-  CalendarOutlined,
-} from "@ant-design/icons";
-import dayjs from "dayjs";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useTheme } from "../../../context/themeContext";
+import { faAdd, faSearch } from "@fortawesome/free-solid-svg-icons";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { getAllHall, toggleHallAvailability } from "../../../apis/hall.api";
+import { useState, useMemo } from "react";
 import ActionHallModal from "./ActionHallModal";
-import { HALL_MOCKS } from "../PartySchedule/SelectHallModal";
+import { toast } from "react-toastify";
 
-const { Text } = Typography;
-
-const bookedSlots = [
-  { hallId: 1, shiftId: 3, date: "2026-02-24" },
-  { hallId: 2, shiftId: 1, date: "2026-02-24" },
-  { hallId: 3, shiftId: 3, date: "2026-02-28" },
-  { hallId: 1, shiftId: 3, date: "2026-03-03" },
-];
-
-const HALL_STATUS = {
-  active: {
-    label: "Hoạt động",
-    color: "success",
-    antColor: "green",
-    icon: <CheckCircleOutlined />,
-  },
-  inactive: {
-    label: "Ngừng hoạt động",
-    color: "error",
-    antColor: "red",
-    icon: <CloseCircleOutlined />,
-  },
-};
-
-export default function HallAndShift() {
-  const [halls, setHalls] = useState(HALL_MOCKS);
-  const [hallModalOpen, setHallModalOpen] = useState({
-    open: false,
-    action: "create",
-  });
-  const [editingHall, setEditingHall] = useState(null);
-  const [hallSearch, setHallSearch] = useState("");
-  const [hallStatusFilter, setHallStatusFilter] = useState(null);
-
+const Stat = ({ halls }) => {
   const { t } = useTheme();
+  const total = halls.length;
+  const available = halls.filter((h) => h.is_available).length;
+  const inUse = total - available;
 
-  const filteredHalls = halls.filter((h) => {
-    if (hallStatusFilter && h.status !== hallStatusFilter) return false;
-    if (hallSearch && !h.name.toLowerCase().includes(hallSearch.toLowerCase()))
-      return false;
-    return true;
-  });
-
-  const todayStr = dayjs().format("YYYY-MM-DD");
-  const isHallBusyToday = (hallId) =>
-    bookedSlots.some((b) => b.hallId === hallId && b.date === todayStr);
-
-  const hallColumns = [
+  const formStat = [
+    { id: 1, title: "Tổng sảnh", data: total, color: "text-blue-600" },
     {
-      title: "Sảnh tiệc",
-      key: "hall",
-      render: (_, rec) => (
-        <Space>
-          <div>
-            <Text strong style={{ display: "block" }}>
-              {rec.name}
-            </Text>
-          </div>
-        </Space>
-      ),
+      id: 2,
+      title: "Còn trống hiện tại",
+      data: available,
+      color: "text-green-600",
     },
-    {
-      title: "Sức chứa",
-      key: "capacity",
-      render: (_, rec) => (
-        <Space orientation="vertical" size={0}>
-          <Text>
-            <TeamOutlined style={{ color: "#1677ff" }} /> {rec.capacity} khách
-          </Text>
-          <Text type="secondary" style={{ fontSize: 12 }}>
-            {rec.tables} bàn
-          </Text>
-        </Space>
-      ),
-      sorter: (a, b) => a.capacity - b.capacity,
-    },
-    {
-      title: "Trạng thái",
-      dataIndex: "status",
-      key: "status",
-      render: (status) => {
-        const cfg = HALL_STATUS[status];
-        return (
-          <Badge
-            status={cfg.color}
-            text={
-              <Tag color={cfg.antColor} icon={cfg.icon}>
-                {cfg.label}
-              </Tag>
-            }
-          />
-        );
-      },
-    },
-    {
-      title: "Hôm nay",
-      key: "today",
-      render: (_, rec) => {
-        const busy = isHallBusyToday(rec.id);
-        return busy ? (
-          <Tag color="red" icon={<CloseCircleOutlined />}>
-            Đang có tiệc
-          </Tag>
-        ) : (
-          <Tag color="green" icon={<CheckCircleOutlined />}>
-            Còn trống
-          </Tag>
-        );
-      },
-    },
-    {
-      title: "Ghi chú",
-      dataIndex: "note",
-      key: "note",
-      render: (note) =>
-        note ? (
-          <Tooltip title={note}>
-            <Text
-              type="secondary"
-              ellipsis
-              style={{ maxWidth: 160, display: "block" }}
-            >
-              {note}
-            </Text>
-          </Tooltip>
-        ) : (
-          <Text type="secondary">—</Text>
-        ),
-    },
-    {
-      title: "Thao tác",
-      key: "action",
-      render: (_, rec) => (
-        <Space>
-          <Tooltip title="Chi tiết">
-            <Button
-              size="middle"
-              icon={<EyeOutlined />}
-              // onClick={() => {
-              //   setDetailHall(rec);
-              //   setHallDetailOpen(true);
-              // }}
-            />
-          </Tooltip>
-          <Tooltip title="Chỉnh sửa">
-            <Button
-              size="middle"
-              type="primary"
-              ghost
-              icon={<EditOutlined />}
-              onClick={() => {
-                setHallModalOpen({ open: true, action: "edit" });
-                setEditingHall(rec);
-              }}
-            />
-          </Tooltip>
-
-          <Tooltip title="Xóa">
-            <Button size="middle" danger icon={<DeleteOutlined />} />
-          </Tooltip>
-        </Space>
-      ),
-    },
+    { id: 3, title: "Đang hoạt động", data: inUse, color: "text-red-600" },
   ];
 
-  const statsHalls = {
-    total: halls.length,
-    active: halls.filter((h) => h.status === "active").length,
-    inactive: halls.filter((h) => h.status === "inactive").length,
-    busyToday: halls.filter((h) => isHallBusyToday(h.id)).length,
-  };
+  return (
+    <div className="grid grid-cols-3 gap-10">
+      {formStat.map((stat) => (
+        <div
+          key={stat.id}
+          className="p-4 border border-gray-300 rounded-md"
+          style={{ background: t.surface }}
+        >
+          <h3 className="text-[1.6rem]">{stat.title}</h3>
+          <p className={`text-[2.2rem] font-semibold ${stat.color}`}>
+            {stat.data}
+          </p>
+        </div>
+      ))}
+    </div>
+  );
+};
+
+function Hall() {
+  const { t } = useTheme();
+  const queryClient = useQueryClient();
+
+  const { data: dataHall, isLoading } = useQuery({
+    queryKey: ["halls"],
+    queryFn: getAllHall,
+  });
+  const halls = dataHall?.data?.items ?? [];
+
+  const [search, setSearch] = useState("");
+  const [filterStatus, setFilterStatus] = useState("all");
+
+  const [openAction, setOpenAction] = useState({
+    open: false,
+    action: "add",
+    dataUpdate: null,
+  });
+
+  const { mutate: toggleAvailability, isPending: isToggling } = useMutation({
+    mutationFn: (hallId) => toggleHallAvailability(hallId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["halls"] });
+      toast.success("Cập nhật trạng thái thành công!");
+    },
+    onError: () => {
+      toast.error("Có lỗi xảy ra. Vui lòng thử lại!");
+    },
+  });
+
+  const filteredHalls = useMemo(() => {
+    return halls.filter((hall) => {
+      const matchSearch = hall.name
+        ?.toLowerCase()
+        .includes(search.toLowerCase());
+      const matchStatus =
+        filterStatus === "all"
+          ? true
+          : filterStatus === "active"
+            ? hall.is_available
+            : !hall.is_available;
+      return matchSearch && matchStatus;
+    });
+  }, [halls, search, filterStatus]);
+
+  const formatPrice = (price) =>
+    new Intl.NumberFormat("vi-VN", {
+      style: "currency",
+      currency: "VND",
+    }).format(price);
 
   return (
-    <div style={{ background: t.surface, minHeight: "100vh", padding: "2rem" }}>
-      <div className="flex items-start justify-between">
-        <div
-          style={{
-            marginBottom: 24,
-            display: "flex",
-            alignItems: "center",
-            gap: 14,
-          }}
-        >
-          <div>
-            <h2
-              style={{
-                margin: 0,
-                fontSize: 22,
-                fontWeight: 600,
-                color: t.text,
-                lineHeight: 1,
-              }}
-            >
-              Quản lý Sảnh
-            </h2>
-            <Text type="secondary">Quản lý toàn bộ sảnh của nhà hàng</Text>
-          </div>
+    <div
+      className="p-10 rounded-md space-y-6"
+      style={{ background: t.surface, minHeight: "100vh" }}
+    >
+      <div className="flex items-center justify-between">
+        <div className="space-y-2">
+          <h2 className="text-[2.2rem] font-semibold">Quản lý Sảnh</h2>
+          <p>Quản lý toàn bộ sảnh của nhà hàng.</p>
         </div>
-        <Button
-          type="primary"
-          icon={<PlusOutlined />}
-          onClick={() => setHallModalOpen({ open: true, action: "create" })}
-          style={{ background: "#1677ff", height: 40 }}
-        >
-          Thêm sảnh mới
-        </Button>
+        <div>
+          <button
+            type="button"
+            onClick={() =>
+              setOpenAction({ open: true, action: "add", dataUpdate: null })
+            }
+            className="flex items-center gap-2 justify-center px-8 py-4 bg-blue-500 text-white hover:bg-blue-600 transition-colors duration-300 rounded-md"
+          >
+            <FontAwesomeIcon icon={faAdd} />
+            <p>Thêm sảnh mới</p>
+          </button>
+        </div>
       </div>
 
-      <HallTab
-        halls={halls}
-        filteredHalls={filteredHalls}
-        hallSearch={hallSearch}
-        setHallSearch={setHallSearch}
-        hallStatusFilter={hallStatusFilter}
-        setHallStatusFilter={setHallStatusFilter}
-        statsHalls={statsHalls}
-        hallColumns={hallColumns}
-      />
+      <Stat halls={halls} />
 
-      <ActionHallModal
-        open={hallModalOpen.open}
-        onClose={() =>
-          setHallModalOpen({
-            open: false,
-            action: "create",
-          })
-        }
-        action={hallModalOpen.action}
-        dataUpdate={editingHall}
-      />
+      <div className="grid grid-cols-4 gap-5">
+        <div className="relative col-span-1">
+          <FontAwesomeIcon
+            icon={faSearch}
+            className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+          />
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full h-[4.5rem] rounded-md border border-gray-300 outline-none pl-10"
+            placeholder="Nhập tên sảnh..."
+          />
+        </div>
+
+        <select
+          value={filterStatus}
+          onChange={(e) => setFilterStatus(e.target.value)}
+          className="w-full h-[4.5rem] rounded-md border border-gray-300 outline-none pl-8 col-span-1"
+        >
+          <option value="all">Tất cả</option>
+          <option value="active">Còn trống</option>
+          <option value="inactive">Đang hoạt động</option>
+        </select>
+      </div>
+
+      <table className="w-full h-auto text-gray-700 divide-y divide-gray-300 border border-gray-300">
+        <thead>
+          <tr className="text-gray-700 divide-x divide-gray-300 bg-gray-50">
+            <th className="p-4 text-start">STT</th>
+            <th className="p-4 text-center">Tên sảnh</th>
+            <th className="p-4 text-center">Trạng thái</th>
+            <th className="p-4 text-center">Vị trí</th>
+            <th className="p-4 text-center">Sức chứa</th>
+            <th className="p-4 text-center">Giá / Bàn</th>
+            <th className="p-4 text-center">Hành động</th>
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-gray-300">
+          {isLoading ? (
+            <tr>
+              <td colSpan={7} className="text-center py-8 text-gray-500">
+                Đang tải dữ liệu...
+              </td>
+            </tr>
+          ) : filteredHalls.length > 0 ? (
+            filteredHalls.map((hall, index) => (
+              <tr
+                key={hall.id}
+                className="text-gray-700 divide-x divide-gray-300 hover:bg-cyan-50 transition-colors"
+              >
+                <td className="p-4 text-start">{index + 1}</td>
+                <td className="p-4 text-center font-medium">{hall.name}</td>
+                <td className="p-4 text-center">
+                  <span
+                    className={`px-3 py-1 rounded-full ${
+                      hall.is_available
+                        ? "bg-green-100 text-green-700"
+                        : "bg-red-100 text-red-700"
+                    }`}
+                  >
+                    {hall.is_available ? "Còn trống" : "Đang hoạt động"}
+                  </span>
+                </td>
+                <td className="p-4 text-center">{hall.location}</td>
+                <td className="p-4 text-center">{hall.capacity} người</td>
+                <td className="p-4 text-center">
+                  {formatPrice(hall.price_per_table)}
+                </td>
+                <td className="p-4 text-center">
+                  <div className="flex items-center justify-center gap-2">
+                    <button
+                      onClick={() =>
+                        setOpenAction({
+                          open: true,
+                          action: "edit",
+                          dataUpdate: hall,
+                        })
+                      }
+                      className="px-4 py-2 bg-green-500 text-white hover:bg-green-600 rounded-md transition-colors "
+                    >
+                      Xem / Sửa
+                    </button>
+                    <button
+                      onClick={() => toggleAvailability(hall.id)}
+                      disabled={isToggling}
+                      className={`px-4 py-2 text-white rounded-md transition-colors  ${
+                        hall.is_available
+                          ? "bg-orange-500 hover:bg-orange-600"
+                          : "bg-blue-500 hover:bg-blue-600"
+                      }`}
+                    >
+                      {hall.is_available ? "Đặt bận" : "Mở trống"}
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            ))
+          ) : (
+            <tr>
+              <td colSpan={7} className="text-center py-8 text-gray-500">
+                Không có sảnh nào
+              </td>
+            </tr>
+          )}
+        </tbody>
+      </table>
+
+      {openAction.open && (
+        <ActionHallModal
+          onClose={() =>
+            setOpenAction({ open: false, action: "add", dataUpdate: null })
+          }
+          action={openAction.action}
+          dataUpdate={openAction.dataUpdate}
+        />
+      )}
     </div>
   );
 }
 
-function HallTab({
-  filteredHalls,
-  hallSearch,
-  setHallSearch,
-  hallStatusFilter,
-  setHallStatusFilter,
-  statsHalls,
-  hallColumns,
-}) {
-  const { t } = useTheme();
-  return (
-    <>
-      <Row gutter={[16, 16]} style={{ marginBottom: 20 }}>
-        {[
-          {
-            title: "Tổng sảnh",
-            value: statsHalls.total,
-            icon: <HomeOutlined />,
-            color: "#1677ff",
-          },
-          {
-            title: "Đang hoạt động",
-            value: statsHalls.active,
-            icon: <CheckCircleOutlined />,
-            color: "#52c41a",
-          },
-          {
-            title: "Ngừng hoạt động",
-            value: statsHalls.inactive,
-            icon: <CloseCircleOutlined />,
-            color: "#ff4d4f",
-          },
-          {
-            title: "Có tiệc hôm nay",
-            value: statsHalls.busyToday,
-            icon: <CalendarOutlined />,
-            color: "#fa8c16",
-          },
-        ].map((s, i) => (
-          <Col xs={12} sm={6} key={i}>
-            <Card
-              style={{
-                borderRadius: 12,
-                boxShadow: "0 1px 6px rgba(0,0,0,0.07)",
-              }}
-            >
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                }}
-              >
-                <Statistic
-                  title={
-                    <Text type="secondary" style={{ fontSize: 12 }}>
-                      {s.title}
-                    </Text>
-                  }
-                  value={s.value}
-                />
-                <div
-                  style={{
-                    width: 46,
-                    height: 46,
-                    borderRadius: 12,
-                    background: t.surface,
-                    border: `1px solid ${s.color}`,
-                    color: s.color,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    fontSize: 20,
-                  }}
-                >
-                  {s.icon}
-                </div>
-              </div>
-            </Card>
-          </Col>
-        ))}
-      </Row>
-
-      <Card
-        style={{
-          borderRadius: 12,
-          marginBottom: 14,
-          boxShadow: "0 1px 4px rgba(0,0,0,0.05)",
-        }}
-      >
-        <Row gutter={[12, 12]} align="middle">
-          <Col xs={24} sm={8}>
-            <Input
-              prefix={<SearchOutlined />}
-              style={{ border: "1px solid #ccc", height: 40 }}
-              placeholder="Tìm kiếm tên sảnh..."
-              value={hallSearch}
-              onChange={(e) => setHallSearch(e.target.value)}
-              allowClear
-            />
-          </Col>
-          <Col xs={12} sm={8}>
-            <Select
-              placeholder="Lọc trạng thái"
-              allowClear
-              width={"100%"}
-              style={{ border: "1px solid #ccc", height: 40, width: "200px" }}
-              value={hallStatusFilter}
-              onChange={setHallStatusFilter}
-              options={Object.entries(HALL_STATUS).map(([k, v]) => ({
-                value: k,
-                label: (
-                  <Tag>
-                    {v.icon} {v.label}
-                  </Tag>
-                ),
-              }))}
-            />
-          </Col>
-        </Row>
-      </Card>
-
-      <Card
-        style={{ borderRadius: 12, boxShadow: "0 1px 4px rgba(0,0,0,0.05)" }}
-      >
-        <Table
-          dataSource={filteredHalls}
-          columns={hallColumns}
-          rowKey="id"
-          pagination={{ pageSize: 5, showTotal: (t) => `Tổng ${t} sảnh` }}
-          locale={{
-            emptyText: (
-              <Empty
-                description="Không có sảnh nào"
-                image={Empty.PRESENTED_IMAGE_SIMPLE}
-              />
-            ),
-          }}
-          style={{ borderRadius: 12, overflow: "hidden" }}
-        />
-      </Card>
-    </>
-  );
-}
+export default Hall;
