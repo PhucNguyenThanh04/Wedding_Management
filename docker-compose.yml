@@ -41,9 +41,22 @@ services:
         condition: service_healthy
     networks:
       - wedding_network
-
+  frontend:
+    build:
+      context: frontend
+      dockerfile: Dockerfile
+    container_name: wedding_frontend
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    networks:
+      - wedding_network
 volumes:
   postgres_data:
+
+
 
 networks:
   wedding_network:
