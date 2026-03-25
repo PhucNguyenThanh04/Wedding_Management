@@ -5,6 +5,8 @@ export const getAllBooking = async () => {
 };
 
 export const createBooking = async (payload) => {
+  console.log(payload);
+
   return await axiosInstance.post("/orders", payload);
 };
 
@@ -32,4 +34,17 @@ export const updateBookingMenu = async (id, data) => {
 
 export const updateBookingItems = async (id, data) => {
   return await axiosInstance.put(`/menus/${id}`, data);
+};
+
+export const addMenuBooking = async ({
+  order_id,
+  menu_id,
+  quantity = 1,
+  notes = "",
+}) => {
+  return await axiosInstance.post(`/orders/${order_id}/menus`, {
+    quantity: Number(quantity),
+    menu_id: Number(menu_id),
+    notes: notes || "",
+  });
 };

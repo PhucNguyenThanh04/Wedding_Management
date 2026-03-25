@@ -10,6 +10,8 @@ import {
   TeamOutlined,
   ShopOutlined,
 } from "@ant-design/icons";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../../hooks/useAuth";
 
 const NAV_ITEMS = [
   { key: "/", icon: <DashboardOutlined />, label: "Dashboard" },
@@ -21,21 +23,17 @@ const NAV_ITEMS = [
 
   { type: "divider" },
 
-  { key: "menu", icon: <ForkOutlined />, label: "Thực đơn" },
+  { key: "menu", icon: <ForkOutlined />, label: "Combo" },
   { key: "dishes", icon: <ShopOutlined />, label: "Món ăn" },
   { key: "customers", icon: <UserOutlined />, label: "Khách hàng" },
   { key: "staffs", icon: <TeamOutlined />, label: "Nhân viên" },
 
-  // { key: "finance", icon: <DollarOutlined />, label: "Thu chi & Công nợ" },
-  // { key: "reports", icon: <BarChartOutlined />, label: "Báo cáo" },
-
-  // { type: "divider" },
-
-  // { key: "settings", icon: <SettingOutlined />, label: "Cài đặt" },
 ];
 
 function AppSidebar({ activeKey, onSelect }) {
   const { t } = useTheme();
+  const navigate = useNavigate();
+  const { user } = useAuth();
   return (
     <Sider
       width={240}
@@ -124,7 +122,10 @@ function AppSidebar({ activeKey, onSelect }) {
           >
             TA
           </Avatar>
-          <div style={{ flex: 1, minWidth: 0 }}>
+          <div
+            style={{ flex: 1, minWidth: 0 }}
+            onClick={() => navigate(`/dashboard/staff/${user.id}`)}
+          >
             <div
               style={{
                 fontSize: 13,
@@ -135,7 +136,7 @@ function AppSidebar({ activeKey, onSelect }) {
                 textOverflow: "ellipsis",
               }}
             >
-              Trung Kiên
+              {user?.full_name}
             </div>
             <div style={{ fontSize: 11, color: t.textMuted }}>Admin</div>
           </div>

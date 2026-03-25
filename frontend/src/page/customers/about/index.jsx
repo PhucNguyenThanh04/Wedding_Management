@@ -85,7 +85,6 @@ function AboutPage() {
       </div>
 
       <div className="xl:px-[15rem] sm:px-[5rem] px-[2rem]  px-6 w-full h-auto pb-[6rem]">
-        {/* ── THỐNG KÊ ── */}
         <div className="grid md:grid-col-3 grid-cols-2 lg:grid-cols-4 gap-6 py-[5rem] border-b border-gray-100">
           {stats.map((s, i) => (
             <div
@@ -108,7 +107,6 @@ function AboutPage() {
           ))}
         </div>
 
-        {/* ── CÂU CHUYỆN ── */}
         <div className="grid grid-cols-1  md:flex items-center gap-[6rem] py-[5rem] border-b border-gray-100">
           <div className="flex-1">
             <h2 className="text-[2rem] tracking-wide text-[#d0690e] uppercase">
@@ -146,7 +144,6 @@ function AboutPage() {
           </div>
         </div>
 
-        {/* ── GIÁ TRỊ CỐT LÕI ── */}
         <div className="py-[5rem] border-b border-gray-100">
           <div className="text-center mb-[4rem]">
             <h2 className="text-[2rem] tracking-wide text-[#d0690e] uppercase">
@@ -174,7 +171,6 @@ function AboutPage() {
           </div>
         </div>
 
-        {/* ── ĐỘI NGŨ ── */}
         <div className="py-[5rem]">
           <div className="text-center mb-[4rem]">
             <h2 className="text-[2rem] tracking-wide text-[#d0690e] uppercase">

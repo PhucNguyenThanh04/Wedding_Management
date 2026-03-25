@@ -202,8 +202,8 @@ function DetailStaff() {
                 height: 88,
                 borderRadius: "50%",
                 objectFit: "cover",
-                border: `3px solid ${accentColor}`,
-                marginBottom: 12,
+                border: `3px solid gray`,
+                margin: "12px auto",
               }}
             />
             <Title
@@ -213,9 +213,6 @@ function DetailStaff() {
               {staff.full_name}
             </Title>
             <div style={{ marginBottom: 8 }}>
-              <Tag color={accentColor} style={{ color: "#fff" }}>
-                {roleInfo.label}
-              </Tag>
               <Tag color={status.color}>{status.label}</Tag>
             </div>
             <Text type="secondary" style={{ fontSize: 14 }}>

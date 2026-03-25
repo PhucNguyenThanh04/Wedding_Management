@@ -15,7 +15,6 @@ function ActionHallModal({ onClose, action, dataUpdate }) {
   const queryClient = useQueryClient();
   const [form] = Form.useForm();
 
-  // Populate form khi edit
   useEffect(() => {
     if (action === "edit" && dataUpdate) {
       form.setFieldsValue({

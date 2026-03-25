@@ -104,10 +104,10 @@ function TopMenus() {
     >
       <div style={{ marginBottom: 20 }}>
         <div style={{ fontSize: 16, fontWeight: 700, color: t.text }}>
-          Top món ăn bán chạy
+          Top combo được chọn
         </div>
         <div style={{ fontSize: 12, color: t.textMuted, marginTop: 2 }}>
-          Những món được gọi nhiều nhất
+          Những combo được đặt nhiều nhất
         </div>
       </div>
 

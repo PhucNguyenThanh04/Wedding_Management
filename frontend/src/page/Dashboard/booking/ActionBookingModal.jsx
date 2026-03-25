@@ -73,8 +73,7 @@ function ActionBookingModal({ onClose }) {
       onClose();
     },
     onError: (err) => {
-      console.log(err);
-
+      console.log(err.message);
       toast.error(err?.response?.data?.message || "Có lỗi xảy ra!");
     },
   });

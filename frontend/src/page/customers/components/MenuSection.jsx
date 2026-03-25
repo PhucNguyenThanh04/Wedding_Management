@@ -1,56 +1,79 @@
-import useReveal from "../../../hooks/useReveal";
 import { CheckCircleOutlined } from "@ant-design/icons";
+import { useQuery } from "@tanstack/react-query";
 import { Button, Tag } from "antd";
+import { getMenus } from "../../../apis/menu.api";
+import { formatPrice } from "../../../utils/formatPrice";
 
 const MENUS = [
   {
-    name: "Gói Bạc",
-    price: "2.500.000đ",
-    guests: "100+ khách",
-    tag: "Phổ biến",
-    tagColor: "blue",
-    featured: false,
-    items: ["Khai vị (3 món)", "Món chính (5 món)", "Tráng miệng", "Đồ uống"],
-  },
-  {
-    name: "Gói Vàng",
-    price: "3.500.000đ",
-    guests: "150+ khách",
-    tag: "Đề xuất",
-    tagColor: "gold",
-    featured: true,
     items: [
-      "Khai vị (4 món)",
-      "Món chính (7 món)",
-      "Hải sản tươi",
-      "Tráng miệng",
-      "Đồ uống cao cấp",
+      "Salad rau củ trộn sốt mayonnaise",
+      "Soup gà nấm hương",
+      "Cá basa sốt chua ngọt",
+      "Thịt heo quay da giòn",
+      "Rau xào thập cẩm",
+      "Tráng miệng trái cây theo mùa",
+      "Nước ngọt + trà đá",
     ],
   },
   {
-    name: "Gói Kim Cương",
-    price: "5.000.000đ",
-    guests: "200+ khách",
-    tag: "Cao cấp",
-    tagColor: "purple",
-    featured: false,
     items: [
-      "Khai vị (5 món)",
-      "Món chính (8 món)",
-      "Hải sản nhập khẩu",
-      "Tráng miệng",
-      "Rượu vang VIP",
+      "Khai vị hải sản kiểu Thái",
+      "Soup bào ngư nấm đông cô",
+      "Tôm sú hấp nước dừa",
+      "Bò lúc lắc tiêu đen",
+      "Cá hồi áp chảo sốt teriyaki",
+      "Rau củ hấp xốt bơ",
+      "Chè đậu đen hạnh nhân",
+      "Đồ uống cao cấp (bia + nước ngọt)",
+    ],
+  },
+  {
+    items: [
+      "Foie gras áp chảo sốt rượu vang",
+      "Soup vi cá mập bào ngư",
+      "Tôm hùm baby nướng phô mai",
+      "Bò Wagyu sốt tiêu xanh",
+      "Cá mú hấp Hong Kong",
+      "Mì ý hải sản sốt kem",
+      "Rau bina xào tỏi tây",
+      "Tiramisu & bánh flan kem",
+      "Rượu vang đỏ & trắng cao cấp",
     ],
   },
 ];
 
 function MenuSection() {
-  const ref = useReveal();
+  const { data: menus = [], isLoading } = useQuery({
+    queryKey: ["menus"],
+    queryFn: getMenus,
+  });
+
+  if (isLoading) {
+    return (
+      <section id="menu" className="py-24 px-6 bg-stone-50">
+        <div className="xl:px-[15rem] sm:px-[5rem] px-[2rem] mx-auto">
+          <div className="text-center mb-16">
+            <div className="h-10 w-96 bg-gray-200 rounded mx-auto mb-4 animate-pulse" />
+            <div className="h-6 w-[500px] bg-gray-200 rounded mx-auto animate-pulse" />
+          </div>
+          <div className="grid md:grid-cols-3 gap-6">
+            {[...Array(3)].map((_, i) => (
+              <div
+                key={i}
+                className="bg-white rounded-xl p-8 h-[520px] animate-pulse"
+              />
+            ))}
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section id="menu" className="py-24 px-6 bg-stone-50">
       <div className="xl:px-[15rem] sm:px-[5rem] px-[2rem] mx-auto">
-        <div ref={ref} className="reveal text-center mb-16">
+        <div className="reveal text-center mb-16">
           <h2
             className="font-semibold"
             style={{
@@ -67,48 +90,30 @@ function MenuSection() {
         </div>
 
         <div className="grid md:grid-cols-3 gap-6">
-          {MENUS.map((m, i) => {
-            // eslint-disable-next-line react-hooks/rules-of-hooks
-            const r = useReveal(i * 100);
-
+          {menus.slice(0, 3).map((m, i) => {
+            const items = MENUS.find((_, index) => index === i).items;
             return (
               <div
                 key={i}
-                ref={r}
-                className={`relative bg-white rounded-xl p-8 flex flex-col shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1 border-t-4 ${
-                  m.featured ? "border-amber-500" : "border-stone-100"
-                }`}
+                className={`relative bg-white rounded-xl p-8 flex flex-col shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1 border-t-4 border-amber-500`}
               >
-                {m.featured && (
-                  <div className="absolute -top-3 right-6">
-                    <Tag color="gold" className="text-[1.6rem] font-bold px-3">
-                      ĐỀ XUẤT
-                    </Tag>
-                  </div>
-                )}
-
-                <Tag
-                  color={m.tagColor}
-                  className="self-start mb-4 text-[1.6rem]"
-                >
-                  {m.tag}
-                </Tag>
-
                 <h3 className="text-gray-900 text-[1.6rem] font-bold mb-1">
                   {m.name}
                 </h3>
 
                 <div className="flex items-baseline gap-1 mb-1">
                   <span className="text-3xl font-bold text-amber-600">
-                    {m.price}
+                    {formatPrice(m.price)}
                   </span>
                   <span className="text-gray-400 text-[1.4rem]">/ bàn</span>
                 </div>
 
-                <p className="text-gray-400 text-[1.6rem] mb-5">{m.guests}</p>
+                <p className="text-gray-400 text-[1.6rem] mb-5">
+                  {m.min_guests} người
+                </p>
 
                 <ul className="flex flex-col gap-2.5 mb-8 flex-1 list-none p-0">
-                  {m.items.map((item, j) => (
+                  {items.map((item, j) => (
                     <li
                       key={j}
                       className="flex items-center gap-2 text-[1.4rem] text-gray-600"
@@ -119,22 +124,7 @@ function MenuSection() {
                   ))}
                 </ul>
 
-                <Button
-                  type={m.featured ? "primary" : "default"}
-                  block
-                  size="large"
-                  href="#contact"
-                  style={
-                    m.featured
-                      ? {
-                          background: "#d97706",
-                          border: "none",
-                          borderRadius: 8,
-                          fontWeight: 600,
-                        }
-                      : { borderRadius: 8, fontWeight: 500 }
-                  }
-                >
+                <Button type="primary" block size="large" href="#contact">
                   Chọn gói này
                 </Button>
               </div>

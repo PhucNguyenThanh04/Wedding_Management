@@ -1,19 +1,20 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { PhoneOutlined, MenuOutlined, CloseOutlined } from "@ant-design/icons";
 import { Button } from "antd";
 // eslint-disable-next-line no-unused-vars
 import { motion } from "framer-motion";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import {
-  faAngleDown,
-  faAngleRight,
-  faArrowRightFromBracket,
-  faBorderAll,
-  faClose,
-} from "@fortawesome/free-solid-svg-icons";
-import { Link, useNavigate } from "react-router-dom";
-import thai from "../../../../assets/images/thai.jpg";
-import { useAuth } from "../../../../hooks/useAuth";
+import { faClose } from "@fortawesome/free-solid-svg-icons";
+// import {
+//   faAngleDown,
+//   faAngleRight,
+//   faArrowRightFromBracket,
+//   faBorderAll,
+//   faClose,
+// } from "@fortawesome/free-solid-svg-icons";
+// import { Link, useNavigate } from "react-router-dom";
+// import thai from "../../../../assets/images/thai.jpg";
+// import { useAuth } from "../../../../hooks/useAuth";
 
 const NAV_LINKS = [
   { label: "Giới thiệu", href: "/about" },
@@ -25,10 +26,10 @@ const NAV_LINKS = [
 function Header({ isBg }) {
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
-  const { user, logout } = useAuth();
-  const elementRef = useRef(null);
-  const [showPersonalModal, setShowPersonalModal] = useState(false);
-  const navigate = useNavigate();
+  // const { user, logout } = useAuth();
+  // const elementRef = useRef(null);
+  // const [showPersonalModal, setShowPersonalModal] = useState(false);
+  // const navigate = useNavigate();
 
   useEffect(() => {
     if (isBg) {
@@ -41,24 +42,24 @@ function Header({ isBg }) {
     }
   }, [isBg]);
 
-  useEffect(() => {
-    const handleClickOutSide = (e) => {
-      if (elementRef.current && !elementRef.current.contains(e.target)) {
-        setShowPersonalModal(false);
-      }
-    };
+  // useEffect(() => {
+  //   const handleClickOutSide = (e) => {
+  //     if (elementRef.current && !elementRef.current.contains(e.target)) {
+  //       setShowPersonalModal(false);
+  //     }
+  //   };
 
-    document.addEventListener("click", handleClickOutSide);
-    return () => {
-      document.removeEventListener("click", handleClickOutSide);
-    };
-  });
+  //   document.addEventListener("click", handleClickOutSide);
+  //   return () => {
+  //     document.removeEventListener("click", handleClickOutSide);
+  //   };
+  // });
 
-  const handleLogout = async () => {
-    await logout();
-    localStorage.removeItem("user");
-    navigate("/");
-  };
+  // const handleLogout = async () => {
+  //   await logout();
+  //   localStorage.removeItem("user");
+  //   navigate("/");
+  // };
 
   return (
     <>
@@ -100,7 +101,7 @@ function Header({ isBg }) {
               <PhoneOutlined />
               <span>035 7124 853</span>
             </a>
-            {user ? (
+            {/* {user ? (
               <div
                 className="relative flex items-center gap-2.5 text-gray-500 cursor-pointer bg-white border border-gray-300 p-1 rounded-full"
                 ref={elementRef}
@@ -140,7 +141,7 @@ function Header({ isBg }) {
                 Đăng nhập
                 <FontAwesomeIcon icon={faAngleRight} />
               </Link>
-            )}
+            )} */}
           </div>
 
           <button

@@ -21,7 +21,6 @@ import {
 import { useState, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import ActionMenu from "./ActionMenu";
-import DishSelectorModal from "./DishselectorModal";
 import axiosInstance from "../../../config/axiosInstance";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";

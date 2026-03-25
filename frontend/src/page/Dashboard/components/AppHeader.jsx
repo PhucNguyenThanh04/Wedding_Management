@@ -8,21 +8,27 @@ import {
   SettingOutlined,
   UserOutlined,
 } from "@ant-design/icons";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../../hooks/useAuth";
+import { getStaffById } from "../../../apis/staff.api";
+import { useQuery } from "@tanstack/react-query";
+
+const roleConfig = {
+  staff: { label: "Nhân viên", color: "#0ea5e9" },
+  admin: { label: "Quản trị viên", color: "#6366f1" },
+};
 
 function AppHeader({ currentTheme, onThemeChange }) {
   const { t } = useTheme();
-
+  const navigate = useNavigate();
+  const { user, logout } = useAuth();
   const items = [
     {
       key: "profile",
       icon: <UserOutlined />,
       label: "Thông tin tài khoản",
     },
-    {
-      key: "settings",
-      icon: <SettingOutlined />,
-      label: "Cài đặt",
-    },
+
     { type: "divider" },
     {
       key: "logout",
@@ -31,11 +37,23 @@ function AppHeader({ currentTheme, onThemeChange }) {
       danger: true,
     },
   ];
+  const { data: staff } = useQuery({
+    queryKey: ["staff", user?.id],
+    queryFn: () => getStaffById(user.id),
+    enabled: !!user?.id,
+  });
+
+  const roleInfo = roleConfig[staff?.role] ?? roleConfig.staff;
 
   const handleMenuClick = ({ key }) => {
     if (key === "logout") {
-      localStorage.removeItem("user");
-      window.location.href = "/dashboard/login";
+      logout();
+      navigate("/dashboard/login");
+    }
+    if (user) {
+      if (key === "profile") {
+        navigate(`/dashboard/staff/${user.id}`);
+      }
     }
   };
 
@@ -73,20 +91,7 @@ function AppHeader({ currentTheme, onThemeChange }) {
       </div>
       <Space size={12} align="center">
         <ThemeSwitcher currentTheme={currentTheme} onChange={onThemeChange} />
-        <Select
-          defaultValue="30"
-          size="middle"
-          style={{ width: 140 }}
-          options={[
-            { value: "7", label: "7 ngày qua" },
-            { value: "30", label: "30 ngày qua" },
-            { value: "90", label: "90 ngày qua" },
-            { value: "365", label: "Năm nay" },
-          ]}
-        />
-        <Badge dot color="red" offset={[-4, 4]}>
-          <Button icon={<BellOutlined />} />
-        </Badge>
+
         {/* <div className="cursor-pointer relative">
           <Avatar
             size={36}
@@ -108,8 +113,12 @@ function AppHeader({ currentTheme, onThemeChange }) {
           <div className="cursor-pointer relative">
             <Avatar
               size={36}
-              src="https://hoiquancaothu.com/images/skins/lien-quan/zuka-gau-nhoi-bong.jpg"
-              alt="avatar admin"
+              icon={<UserOutlined />}
+              style={{
+                background: roleInfo.color,
+                margin: "8px auto 16px",
+                display: "block",
+              }}
             />
             {/* Dot online */}
             <span

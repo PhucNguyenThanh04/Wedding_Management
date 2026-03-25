@@ -13,7 +13,6 @@ import AboutPage from "./page/customers/about";
 import HallPage from "./page/customers/hall";
 import MenuPage from "./page/customers/menu";
 import ContactPage from "./page/customers/contact";
-import LoginAndRegister from "./page/customers/auth/loginandregister";
 import OrderPage from "./page/customers/history";
 import PrivateRoute from "./components/privateRoute";
 import PrivateRouteAdmin from "./components/privateRouteAdmin";
@@ -23,6 +22,8 @@ import Booking from "./page/Dashboard/booking";
 import BookingDetail from "./page/Dashboard/booking/BookingDetail";
 import MenuDetailPage from "./page/Dashboard/Menu/ComboDetail";
 import BookingPage from "./page/customers/booking";
+import BookingAddMenu from "./page/Dashboard/booking/BookingAddMenu";
+import ProfilePage from "./page/Dashboard/ProfilePage";
 
 function App() {
   return (
@@ -37,7 +38,7 @@ function App() {
       <Route path="/contact" element={<ContactPage />} />
       <Route path="/orders" element={<OrderPage />} />
 
-      <Route path="/auth" element={<LoginAndRegister />} />
+      {/* <Route path="/auth" element={<LoginAndRegister />} /> */}
 
       <Route path="/dashboard/login" element={<LoginAdmin />} />
 
@@ -58,6 +59,9 @@ function App() {
         <Route path="dishes" element={<Dish />} />
         <Route path="customers" element={<Customer />} />
         <Route path="customers/detail/:id" element={<DetailCustomer />} />
+        <Route path="booking/:id/add-menu" element={<BookingAddMenu />} />
+        <Route path="staff/:id" element={<ProfilePage />} />
+
         <Route
           path="staffs"
           element={

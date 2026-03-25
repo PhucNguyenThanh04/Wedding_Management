@@ -25,7 +25,6 @@ axiosInstance.interceptors.response.use(
     //   localStorage.removeItem("access_token");
     //   window.location.href = "/dashboard/login";
     // }
-
     return Promise.reject(error);
   },
 );

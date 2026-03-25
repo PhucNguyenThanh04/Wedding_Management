@@ -7,12 +7,13 @@ import {
   faCalendar,
   faUser,
   faUtensils,
-  faChair,
   faFileAlt,
   faMoneyBill,
+  faAdd,
 } from "@fortawesome/free-solid-svg-icons";
 import dayjs from "dayjs";
 import { getBookingById } from "../../../apis/booking.api";
+import { Button } from "antd";
 
 const STATUS_CONFIG = {
   booking_pending: {
@@ -96,7 +97,6 @@ function BookingDetail() {
     queryFn: () => getBookingById(id),
     enabled: !!id,
   });
-
   const booking = data?.data;
 
   if (isLoading) {
@@ -142,7 +142,7 @@ function BookingDetail() {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <button
-            onClick={() => navigate(-1)}
+            onClick={() => navigate(`/dashboard/booking`)}
             className="p-3 rounded-md border border-gray-300 hover:bg-gray-100 transition-colors"
           >
             <FontAwesomeIcon icon={faArrowLeft} className="text-[1.6rem]" />
@@ -237,37 +237,83 @@ function BookingDetail() {
             surface={t.surface}
           >
             {booking.order_menus?.length > 0 ? (
-              <table className="w-full text-gray-700 divide-y divide-gray-200">
-                <thead>
-                  <tr className="text-gray-500 text-[1.3rem]">
-                    <th className="pb-3 text-start">Tên menu</th>
-                    <th className="pb-3 text-center">Số lượng</th>
-                    <th className="pb-3 text-right">Thành tiền</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-100">
-                  {booking.order_menus.map((menu) => (
-                    <tr key={menu.id}>
-                      <td className="py-3 text-[1.4rem]">
-                        {menu.menu_name ?? `Menu #${menu.menu_id}`}
-                      </td>
-                      <td className="py-3 text-center text-[1.4rem]">
-                        {menu.quantity}
-                      </td>
-                      <td className="py-3 text-right text-[1.4rem] text-blue-600 font-medium">
-                        {formatCurrency(menu.total_price)}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            ) : (
-              <p className="text-gray-400 text-[1.4rem] text-center py-4">
-                Chưa có menu nào được thêm
-              </p>
-            )}
-          </Section>
+              <div className="space-y-8">
+                {booking.order_menus.map((menu, index) => (
+                  <div
+                    key={menu.id || index}
+                    className="border border-gray-200 rounded-xl p-6 bg-white"
+                  >
+                    <div className="flex justify-between items-start mb-5">
+                      <div>
+                        <h4 className="text-[1.65rem] font-semibold text-gray-900">
+                          {menu.menu_name || `Menu #${menu.menu_id}`}
+                        </h4>
+                        <p className="text-gray-500 text-[1.35rem]">
+                          {menu.quantity} bàn ×{" "}
+                          {formatCurrency(
+                            menu.price_per_table || menu.unit_price,
+                          )}
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-[1.5rem] font-bold text-blue-600">
+                          {formatCurrency(menu.total_price)}
+                        </p>
+                        <p className="text-gray-400">Thành tiền</p>
+                      </div>
+                    </div>
 
+                    {menu.items && menu.items.length > 0 ? (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-3 text-[1.6rem]">
+                        {menu.items.map((item, idx) => (
+                          <div key={idx} className="flex items-start gap-3">
+                            <span className="text-amber-500 mt-1">•</span>
+                            <span className="text-gray-700">{item}</span>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-gray-400 italic">
+                        Chưa có chi tiết món ăn
+                      </p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-12 border-2 border-dashed border-gray-300 rounded-2xl">
+                <p className="text-gray-400 text-[1.5rem] mb-6">
+                  Chưa chọn gói menu nào cho đơn đặt tiệc này
+                </p>
+
+                <Button
+                  type="primary"
+                  size="large"
+                  icon={<FontAwesomeIcon icon={faUtensils} />}
+                  onClick={() =>
+                    navigate(`/dashboard/booking/${booking.id}/add-menu`)
+                  }
+                  className="h-14 px-10 text-[1.4rem]"
+                >
+                  Chọn gói menu ngay
+                </Button>
+
+                <p className="text-gray-500 text-[1.3rem] mt-4">
+                  Bạn có thể chọn sau, nhân viên sẽ liên hệ hỗ trợ
+                </p>
+              </div>
+            )}
+            <div
+              className="w-full h-[10rem] border border-dashed border-gray-400 rounded-xl mt-5 flex items-center justify-center mb-6 cursor-pointer"
+              onClick={() =>
+                navigate(`/dashboard/booking/${booking.id}/add-menu`)
+              }
+            >
+              <FontAwesomeIcon icon={faAdd} />
+              <span>Thêm combo</span>
+            </div>
+          </Section>
+          {/* 
           <Section
             icon={faChair}
             title={`Món ăn thêm (${booking.order_items?.length ?? 0})`}
@@ -303,7 +349,7 @@ function BookingDetail() {
                 Chưa có món ăn thêm nào
               </p>
             )}
-          </Section>
+          </Section> */}
         </div>
 
         <div className="col-span-1 space-y-6">

@@ -146,7 +146,7 @@ function DishFormModal({ open, editingDish, onSave, onCancel, isLoading }) {
               { value: "appetizer", label: "Khai vị" },
               { value: "main_course", label: "Món chính" },
               { value: "dessert", label: "Tráng miệng" },
-              { value: "drink", label: "Đồ uống" },
+              { value: "beverage", label: "Đồ uống" },
             ]}
           />
         </Form.Item>
@@ -504,7 +504,7 @@ function Dish() {
           <div>Không có món ăn nào</div>
         </div>
       ) : (
-        <div className="grid grid-cols-5">
+        <div className="grid grid-cols-5 gap-5">
           {filteredDishes.map((item) => (
             <DishGridCard key={item.id} item={item} />
           ))}

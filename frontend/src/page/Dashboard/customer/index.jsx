@@ -174,7 +174,6 @@ function Customer() {
             <th className="p-2 text-start">Họ tên</th>
             <th className="p-2 text-start">Email</th>
             <th className="p-2 text-start">Số điện thoại</th>
-            <th className="p-2 text-start">Tổng chi tiêu</th>
             <th className="p-2 text-center">Hành động</th>
           </tr>
         </thead>
@@ -194,69 +193,73 @@ function Customer() {
               </td>
             </tr>
           ) : (
-            displayCustomers.map((customer) => (
-              <tr
-                key={customer.id}
-                style={{ borderBottom: `1px solid ${t.border}` }}
-              >
-                <td className="p-2">
-                  <img
-                    src={customer.image ?? male}
-                    alt={customer.full_name}
-                    style={{ width: 50, height: 50, borderRadius: "5px" }}
-                  />
-                </td>
-                <td className="p-2">{customer.full_name}</td>
-                <td className="p-2">{customer.email}</td>
-                <td className="p-2">{customer.phone}</td>
-                <td className="p-2 text-start">500.000.000đ</td>
-                <td
-                  className="p-2"
-                  style={{
-                    display: "flex",
-                    justifyContent: "center",
-                    alignItems: "center",
-                    gap: 10,
-                  }}
+            displayCustomers.map((customer) => {
+              console.log(customer);
+              
+              return (
+                <tr
+                  key={customer.id}
+                  style={{ borderBottom: `1px solid ${t.border}` }}
                 >
-                  <Link
-                    to={`detail/${customer.id}`}
+                  <td className="p-2">
+                    <img
+                      src={customer.image ?? male}
+                      alt={customer.full_name}
+                      style={{ width: 50, height: 50, borderRadius: "5px" }}
+                    />
+                  </td>
+                  <td className="p-2">{customer.full_name}</td>
+                  <td className="p-2">{customer.email}</td>
+                  <td className="p-2">{customer.phone}</td>
+                  {/* <td className="p-2 text-start">{customer.} 500.000.000đ</td> */}
+                  <td
+                    className="p-2"
                     style={{
-                      color: "#fff",
-                      background: "#4caf50",
-                      textDecoration: "none",
-                      display: "inline-block",
-                      textAlign: "center",
-                      fontSize: 14,
-                      padding: "6px 12px",
-                      borderRadius: 4,
-                      cursor: "pointer",
+                      display: "flex",
+                      justifyContent: "center",
+                      alignItems: "center",
+                      gap: 10,
                     }}
                   >
-                    Xem chi tiết
-                  </Link>
-                  <button
-                    style={{
-                      padding: "6px 12px",
-                      color: "#fff",
-                      border: "none",
-                      borderRadius: 4,
-                      cursor: "pointer",
-                    }}
-                    className="bg-amber-500 hover:bg-amber-600 transition"
-                    onClick={() =>
-                      setOpenAction({
-                        open: true,
-                        action: "edit",
-                        data: customer,
-                      })
-                    }
-                  >
-                    Sửa
-                  </button>
-                </td>
-              </tr>
-            ))
+                    <Link
+                      to={`detail/${customer.id}`}
+                      style={{
+                        color: "#fff",
+                        background: "#4caf50",
+                        textDecoration: "none",
+                        display: "inline-block",
+                        textAlign: "center",
+                        fontSize: 14,
+                        padding: "6px 12px",
+                        borderRadius: 4,
+                        cursor: "pointer",
+                      }}
+                    >
+                      Xem chi tiết
+                    </Link>
+                    <button
+                      style={{
+                        padding: "6px 12px",
+                        color: "#fff",
+                        border: "none",
+                        borderRadius: 4,
+                        cursor: "pointer",
+                      }}
+                      className="bg-amber-500 hover:bg-amber-600 transition"
+                      onClick={() =>
+                        setOpenAction({
+                          open: true,
+                          action: "edit",
+                          data: customer,
+                        })
+                      }
+                    >
+                      Sửa
+                    </button>
+                  </td>
+                </tr>
+              );
+            })
           )}
         </tbody>
       </table>

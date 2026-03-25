@@ -27,13 +27,6 @@ const statusConfig = {
   vip: { color: "gold", label: "VIP" },
 };
 
-const rankConfig = (totalSpent) => {
-  if (totalSpent >= 10000000) return { label: "Kim cương", color: "#0ea5e9" };
-  if (totalSpent >= 5000000) return { label: "Vàng", color: "#f59e0b" };
-  if (totalSpent >= 2000000) return { label: "Bạc", color: "#94a3b8" };
-  return { label: "Đồng", color: "#b45309" };
-};
-
 function DetailCustomer() {
   const { t } = useTheme();
   const navigate = useNavigate();
@@ -142,7 +135,6 @@ function DetailCustomer() {
     );
   }
 
-  const rank = rankConfig(customer.total_spent ?? 0);
   const status = statusConfig[customer.status] ?? statusConfig.active;
   const total_spent =
     orders.length > 0 &&
@@ -157,7 +149,8 @@ function DetailCustomer() {
       currency: "VND",
     }).format(price);
   };
-
+  console.log(customer);
+  
   return (
     <div
       style={{
@@ -229,8 +222,8 @@ function DetailCustomer() {
                 height: 90,
                 borderRadius: "50%",
                 objectFit: "cover",
-                border: `3px solid ${rank.color}`,
-                marginBottom: 12,
+                border: `3px solid gray`,
+                margin: "12px auto",
               }}
             />
             <Title
@@ -241,13 +234,7 @@ function DetailCustomer() {
             </Title>
             <div style={{ marginBottom: 10 }}>
               <Tag color={status.color}>{status.label}</Tag>
-              <Tag color={rank.color} style={{ marginLeft: 4 }}>
-                Hạng {rank.label}
-              </Tag>
             </div>
-            <Text type="secondary" style={{ fontSize: 16 }}>
-              {/* #{customer.id?.slice(0, 8).toUpperCase()} */}
-            </Text>
           </div>
 
           <div style={cardStyle}>
@@ -367,14 +354,6 @@ function DetailCustomer() {
                 title: "Số đơn hàng",
                 value: orders.length,
                 bg: "#e0f2fe",
-              },
-              {
-                icon: (
-                  <TrophyOutlined style={{ fontSize: 22, color: rank.color }} />
-                ),
-                title: "Hạng thành viên",
-                value: rank.label,
-                bg: "#fef9c3",
               },
             ].map((stat, i) => (
               <div

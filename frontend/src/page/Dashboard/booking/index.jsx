@@ -1,5 +1,5 @@
-import { faAdd } from "@fortawesome/free-solid-svg-icons";
-import { useState, useMemo } from "react";
+import { faAdd, faPrint } from "@fortawesome/free-solid-svg-icons";
+import { useState, useMemo, useRef } from "react";
 import { useTheme } from "../../../context/themeContext";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useQuery } from "@tanstack/react-query";
@@ -8,6 +8,8 @@ import ActionBookingModal from "./ActionBookingModal";
 import CancelBookingModal from "./Cancelbookingmodal";
 import UpdateStatusBookingModal from "./Updatestatusbookingmodal";
 import { Link } from "react-router-dom";
+import { useReactToPrint } from "react-to-print";
+import InvoicePrint from "./InvoicePrint";
 
 const STATUS_CONFIG = {
   booking_pending: {
@@ -84,6 +86,19 @@ function Booking() {
       return matchSearch && matchStatus && matchShift;
     });
   }, [bookings, search, filterStatus, filterShift]);
+
+  const printRef = useRef(null);
+  const [printTarget, setPrintTarget] = useState(null);
+
+  const handlePrint = useReactToPrint({
+    contentRef: printRef,
+    documentTitle: `Hóa đơn #${printTarget?.id ?? ""}`,
+  });
+
+  const openPrint = (booking) => {
+    setPrintTarget(booking);
+    setTimeout(() => handlePrint(), 0);
+  };
 
   return (
     <div
@@ -169,6 +184,7 @@ function Booking() {
               };
               const canUpdate = CAN_UPDATE_STATUS.includes(booking.status);
               const canCancel = CAN_CANCEL.includes(booking.status);
+              console.log(booking);
 
               return (
                 <tr
@@ -209,14 +225,25 @@ function Booking() {
                       >
                         Chi tiết
                       </Link>
-                      <button
-                        onClick={() => canUpdate && setStatusTarget(booking)}
-                        disabled={!canUpdate}
-                        className="px-4 py-2 bg-orange-500 text-white hover:bg-orange-600 rounded-md transition-colors"
-                        title={canUpdate ? "Nhấn để cập nhật trạng thái" : ""}
-                      >
-                        Cập nhật
-                      </button>
+                      {booking.status !== "completed" && (
+                        <button
+                          onClick={() => canUpdate && setStatusTarget(booking)}
+                          disabled={!canUpdate}
+                          className="px-4 py-2 bg-orange-500 text-white hover:bg-orange-600 rounded-md transition-colors"
+                          title={canUpdate ? "Nhấn để cập nhật trạng thái" : ""}
+                        >
+                          Cập nhật
+                        </button>
+                      )}
+                      {booking.status === "completed" && (
+                        <button
+                          onClick={() => openPrint(booking)}
+                          className="px-4 py-2 bg-blue-500 text-white hover:bg-blue-600 rounded-md transition-colors"
+                        >
+                          <FontAwesomeIcon icon={faPrint} /> In hóa đơn
+                        </button>
+                      )}
+
                       {canCancel && (
                         <button
                           onClick={() => setCancelTarget(booking)}
@@ -239,7 +266,9 @@ function Booking() {
           )}
         </tbody>
       </table>
-
+      <div style={{ display: "none" }}>
+        <InvoicePrint ref={printRef} booking={printTarget} />
+      </div>
       {openAction && (
         <ActionBookingModal onClose={() => setOpenAction(false)} />
       )}
